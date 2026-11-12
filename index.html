@@ -120,6 +120,7 @@ body.speaking .msg.npc.cur .av{animation:talk .6s infinite alternate}
 .hintbox{background:var(--warn-bg);border-radius:12px;padding:8px 12px;margin:0 0 8px;font-size:15px}
 .choices{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .choices button{border:1.5px solid var(--pri);background:var(--pri-pale);border-radius:99px;padding:8px 14px;font-size:16px;min-height:44px}
+.choices button.on{background:var(--pri);color:var(--pri-ink);font-weight:700}
 .choices.ans button{flex:1 1 100%;border-radius:12px;min-height:52px;font-size:17px;text-align:left}
 .micwrap{display:flex;flex-direction:column;align-items:center;gap:4px}
 .mic{width:96px;height:96px;border-radius:50%;border:0;background:var(--acc);color:#fff;font-size:40px;box-shadow:0 4px 14px rgba(224,123,22,.35)}
@@ -174,7 +175,7 @@ textarea.log{min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size
 
 <script>
 'use strict';
-const APP_VERSION = '2026.11.12-1';
+const APP_VERSION = '2026.11.12-2';
 
 /* =====================================================================
    教材データ（あとから足しやすいように、ここにまとめて書く）
@@ -559,7 +560,7 @@ function speak(text, { who = 'narrator', rate = 0.85 } = {}) {
     u.lang = 'en-US'; u.pitch = a.pitch; u.rate = Math.max(0.5, Math.min(1.4, rate * a.rate));
     let done = false;
     const fin = () => { if (done) return; done = true; clearTimeout(t); if (my === speakSeq) setSpeaking(false); resolve(); };
-    u.onend = fin; u.onerror = e => { diag('tts error: ' + (e.error || '')); fin(); };
+    u.onstart = () => diag('tts start: ' + text.slice(0, 24)); u.onend = () => { diag('tts end'); fin(); }; u.onerror = e => { diag('tts error: ' + (e.error || '')); fin(); };
     const t = setTimeout(fin, 3000 + text.split(/\s+/).length * 700 / u.rate);
     setSpeaking(true);
     // 前の読み上げを止めた直後は、iPhoneで次が無視されることがあるので少し待つ
@@ -587,19 +588,34 @@ function inputMode() {
   return 'mic';
 }
 const MODE_LABEL = { mic: '🎤 マイク', keyboard: '⌨️ キーボード', offline: '📴 オフライン（選択式）' };
-let rec = null;
+let rec = null, recInst = null, recRenew = true, recSeq = 0, emptyRuns = 0;
+// 聞き取りの部品は使い回す（iPhoneで毎回作り直すと2回目から音が入らないことがある）。空振りしたら次は作り直す
+function getRec() {
+  if (!recInst || recRenew) { try { recInst = new SR(); } catch (e) { return null; } recRenew = false; diag('mic: new recognizer'); }
+  else diag('mic: reuse recognizer');
+  return recInst;
+}
 function listen({ onInterim, timeout = 9000 } = {}) {
   return new Promise(resolve => {
-    let r;
-    try { r = new SR(); } catch (e) { resolve({ alts: [], err: 'create-failed', started: false }); return; }
+    const r = getRec();
+    if (!r) { resolve({ alts: [], err: 'create-failed', started: false }); return; }
+    const my = ++recSeq;
     rec = r; r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = false;
-    let alts = [], interim = '', started = false, err = null, done = false;
-    const finish = () => { if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); if (rec === r) rec = null; if (!alts.length && interim) alts = [interim]; diag('listen done: ' + JSON.stringify(alts) + (err ? ' err=' + err : '')); resolve({ alts, err, started }); };
-    r.onstart = () => { started = true; diag('mic start'); };
-    r.onaudiostart = () => diag('audio start');
-    r.onspeechstart = () => diag('speech start');
-    r.onspeechend = () => diag('speech end');
-    r.onresult = e => {
+    let alts = [], interim = '', started = false, audio = false, err = null, done = false;
+    const finish = () => {
+      if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); if (rec === r) rec = null;
+      if (!alts.length && interim) alts = [interim];
+      // 音が一度も入らなかった・始まらなかったときは、次回は部品を作り直す
+      if (!alts.length && (!audio || err)) { recRenew = true; emptyRuns++; } else emptyRuns = 0;
+      diag('listen done #' + my + ': ' + JSON.stringify(alts) + (err ? ' err=' + err : '') + (audio ? '' : ' (no audio)'));
+      resolve({ alts, err, started });
+    };
+    const live = fn => (...a) => { if (my === recSeq) fn(...a); };   // 前の回の知らせは無視する
+    r.onstart = live(() => { started = true; diag('mic start'); });
+    r.onaudiostart = live(() => { audio = true; diag('audio start'); });
+    r.onspeechstart = live(() => diag('speech start'));
+    r.onspeechend = live(() => diag('speech end'));
+    r.onresult = live(e => {
       const fin = []; let it = '', finText = '';
       for (let i = 0; i < e.results.length; i++) {
         const res = e.results[i];
@@ -610,20 +626,34 @@ function listen({ onInterim, timeout = 9000 } = {}) {
       else interim = it;
       onInterim && onInterim(interim);
       if (finText.trim()) { try { r.stop(); } catch (_) {} }
-    };
-    r.onerror = e => { err = e.error || 'error'; diag('mic error: ' + err); };
-    r.onnomatch = () => diag('nomatch');
-    r.onend = () => { diag('mic end'); finish(); };
+    });
+    r.onerror = live(e => { err = e.error || 'error'; diag('mic error: ' + err); });
+    r.onnomatch = live(() => diag('nomatch'));
+    r.onend = live(() => { diag('mic end'); finish(); });
     const t1 = setTimeout(() => { if (!started) { err = err || 'start-timeout'; diag('start timeout'); try { r.abort(); } catch (_) {} finish(); } }, 4000);
-    const t2 = setTimeout(() => { diag('listen timeout'); try { r.stop(); } catch (_) {} setTimeout(finish, 1500); }, timeout);
-    try { r.start(); diag('start() called'); } catch (e) { err = 'start-failed'; diag('start failed: ' + e.message); finish(); }
+    const t2 = setTimeout(() => { diag('listen timeout'); try { r.stop(); } catch (_) {} setTimeout(() => { try { r.abort(); } catch (_) {} finish(); }, 1500); }, timeout);
+    try { r.start(); diag('start() called #' + my); }
+    catch (e) {
+      // 前の回がまだ閉じていない（InvalidStateError）ときは、作り直してもう一度
+      diag('start failed: ' + e.message);
+      try { r.abort(); } catch (_) {}
+      recRenew = true; const r2 = getRec();
+      if (r2 && r2 !== r) { Object.assign(r2, { lang: r.lang, interimResults: true, maxAlternatives: 3, continuous: false, onstart: r.onstart, onaudiostart: r.onaudiostart, onspeechstart: r.onspeechstart, onspeechend: r.onspeechend, onresult: r.onresult, onerror: r.onerror, onnomatch: r.onnomatch, onend: r.onend }); rec = r2;
+        try { r2.start(); diag('start() retried'); return; } catch (e2) { diag('retry failed: ' + e2.message); } }
+      err = 'start-failed'; finish();
+    }
   });
 }
 function stopListening() { if (rec) { try { rec.stop(); } catch (_) {} } }
 // マイクで1回聞く。使えなかったら回数を数え、2回続いたらキーボード方式へ自動で切り替える
 let listening = false;
 async function micListen(onInterim) {
-  stopSpeaking(); listening = true;
+  listening = true;
+  // 読み上げ中なら止めて、iPhoneの音の切り替えが終わるまで少し待つ
+  const wasSpeaking = hasTTS && (speechSynthesis.speaking || speechSynthesis.pending);
+  stopSpeaking();
+  if (rec) { try { rec.abort(); } catch (_) {} }
+  if (wasSpeaking) { diag('mic: wait after tts'); await sleep(400); }
   const r = await listen({ onInterim });
   listening = false;
   const hard = ['not-allowed', 'service-not-allowed', 'start-timeout', 'start-failed', 'create-failed', 'audio-capture'];
@@ -634,9 +664,9 @@ async function micListen(onInterim) {
     return null;
   }
   if (r.err === 'network') { toast('ネットにつながらず聞き取れませんでした'); return null; }
-  if (!r.alts.length) { toast('聞こえませんでした。もう一度どうぞ'); return null; }
+  if (!r.alts.length) { toast(emptyRuns >= 2 ? '聞き取れませんでした。うまくいかないときは、答えの例をタップして進めます' : '聞こえませんでした。もう一度どうぞ', 3500); return null; }
   if (S.sys.micBroken[ctxKey()]) { S.sys.micBroken[ctxKey()] = 0; save(); }
-  await sleep(250); // マイクから読み上げへの切り替えを待つ
+  await sleep(400); // マイクから読み上げへの切り替えを待つ
   return r.alts;
 }
 window.addEventListener('online', () => { toast('ネットにつながりました'); refreshDock(); });
@@ -783,8 +813,11 @@ function refreshDock() {
     h += `<div class="muted small">📴 オフラインなので、答えを選んでください（声に出して言ってから選ぶと効果的）</div>
       <div class="choices ans">${opts.map(o => `<button class="en" data-act="choose" data-arg="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
   } else {
-    const showChoices = C.diff === 0 || t.misses >= 2;
-    if (showChoices) h += `<div class="muted small">言える答えの例（タップでお手本）</div><div class="choices">${n.choices.map(c => `<button class="en" data-act="sayText" data-arg="${esc(c)}">${esc(c)}</button>`).join('')}</div>`;
+    const showChoices = C.diff === 0 || t.misses >= 2 || emptyRuns >= 2 || t.picked;
+    if (showChoices) {
+      h += `<div class="muted small">言える答えの例（タップでお手本が流れます。真似して🎤で言ってみましょう）</div><div class="choices">${n.choices.map(c => `<button class="en ${t.picked === c ? 'on' : ''}" data-act="pick" data-arg="${esc(c)}">${t.picked === c ? '✔ ' : ''}${esc(c)}</button>`).join('')}</div>`;
+      if (t.picked) h += `<button class="btn sub" style="min-height:48px;font-size:16px" data-act="usePick">👆 「<span class="en">${esc(t.picked)}</span>」で答える<span class="small">（ヒント扱い）</span></button>`;
+    }
     if (mode === 'mic') {
       h += `<div class="micwrap"><button class="mic ${listening ? 'on' : ''}" data-act="mic" aria-label="話す">🎤</button><div class="live" id="live">${listening ? '聞いています…' : '押して英語で答える'}</div></div>`;
     } else {
@@ -903,7 +936,7 @@ function vReview() {
   C.turns.forEach(t => {
     const n = C.sc.nodes[t.nodeId]; const good = t.hint === 0 && t.misses === 0;
     h += `<div class="turn"><div class="muted small">相手</div><div class="en" style="font-weight:700">${esc(n.say)}</div><div class="muted small">${esc(n.ja)}</div>
-      <div style="margin-top:6px">${good ? '✅ うまく言えました' : `⚠️ ${t.hint ? 'ヒント' + t.hint + '回' : ''}${t.hint && t.misses ? '・' : ''}${t.misses ? '言い直し' + t.misses + '回' : ''}`}</div>
+      <div style="margin-top:6px">${good ? '✅ うまく言えました' : t.tapped ? '👆 タップで答えました（次は声で言ってみましょう）' : `⚠️ ${t.hint ? 'ヒント' + t.hint + '回' : ''}${t.hint && t.misses ? '・' : ''}${t.misses ? '言い直し' + t.misses + '回' : ''}`}</div>
       <div class="small">あなた：<span class="en">${esc(t.said)}</span></div>
       <div class="muted small" style="margin-top:6px">自然な言い方の例</div>
       ${n.examples.map(x => `<div class="ex"><button data-act="sayText" data-arg="${esc(x)}" aria-label="お手本">🔊</button><span class="en">${esc(x)}</span></div>`).join('')}</div>`;
@@ -987,13 +1020,15 @@ function vSettings() {
     <select data-set="cv:officer">${voiceOptions(s.charVoices.officer || '', true)}</select>
     <div class="muted small" style="margin-top:4px">いま使っている声：${off.v ? esc(vLabel(off.v)) : '—'}（高さ ${off.pitch.toFixed(2)}）</div>
     <button class="btn sub" style="margin-top:8px" data-act="testVoice" data-arg="officer">▶ 試しに聞く</button>
-    <details style="margin-top:6px"><summary class="small">もっと自然な声にするには</summary>
-      <div class="small" style="margin-top:6px">iPhoneの「設定」→「アクセシビリティ」→「読み上げコンテンツ」→「声」→「英語」で、名前に「拡張」「プレミアム」とある声（例：Ava、Evan、Samantha）をダウンロードしてください。アプリを開き直すと自動で使います。日本語の読み上げ設定は変わりません。</div></details>
+    <details style="margin-top:6px"><summary class="small">もっと自然な声にするには（やらなくても使えます）</summary>
+      <div class="small" style="margin-top:6px">iPhoneの「設定」の一番上の検索欄で「声」または「読み上げ」と検索し、出てきた「声」→「英語」を開いて、名前の横に「拡張」「プレミアム」とある声をダウンロードしてください（iOSの版によって場所の名前が違います）。アプリを開き直すと自動で使います。日本語の読み上げ設定は変わりません。</div></details>
   </div>
   <div class="card"><h2>🎤 答え方</h2>
     ${seg('inputMode', [['auto', '自動'], ['mic', 'マイク'], ['keyboard', 'キーボード']])}
     <div class="muted small" style="margin-top:6px">いまの答え方：<b>${MODE_LABEL[inputMode()]}</b>${!SR ? '（このブラウザには音声認識の機能がありません）' : ''}${(S.sys.micBroken[ctxKey()] || 0) >= 2 ? '（マイクが使えなかったため自動で切り替え中）' : ''}</div>
     ${(S.sys.micBroken[ctxKey()] || 0) ? `<button class="btn sub" style="margin-top:8px" data-act="retryMic">🎤 マイク方式を試し直す</button>` : ''}
+    <details style="margin-top:8px"><summary class="small">毎回マイクの許可を聞かれるときは</summary>
+      <div class="small" style="margin-top:6px">Safariで開いているときは、アドレス欄の左（または右）のメニューから「Webサイトの設定」→「マイク」を「許可」にすると、聞かれなくなります。見つからないときは、iPhoneの「設定」の検索欄で「Safari」→「マイク」を開き「許可」にしてください。<br>ホーム画面から開いたアプリでは、iPhoneの仕組み上、開き直すたびに聞かれることがあります（アプリ側では止められません）。</div></details>
     <div class="small" style="margin-top:8px">キーボード方式のときは、iPhoneの「設定」→「一般」→「キーボード」→「キーボード」で「英語（米国）」を追加しておくと、🌐で切り替えて英語で音声入力できます。</div>
     <button class="btn sub" style="margin-top:10px" data-act="tab" data-arg="diag">🩺 音声の診断</button>
   </div>
@@ -1070,6 +1105,9 @@ const ACT = {
   hint: () => { if (C.turn.hint >= 3) return; C.turn.hint++; refreshDock(); if (C.turn.hint === 3) speak(curNode().hint.model, { rate: 0.8 }); },
   sayText: a => speak(a, { rate: 0.8 }),
   choose: a => handleAnswer([a]),
+  // 答えの例：タップで選ぶ＋お手本。「この答えで進む」でタップのまま答えられる（ヒント3段目と同じ扱い）
+  pick: a => { if (!C || !C.turn) return; C.turn.picked = a; refreshDock(); speak(a, { rate: 0.8 }); },
+  usePick: () => { if (!C || !C.turn || !C.turn.picked) return; C.turn.hint = 3; C.turn.tapped = true; const a = C.turn.picked; handleAnswer([a]); },
   mic: async () => {
     if (listening) { stopListening(); return; }
     if (C.busy) { stopSpeaking(); }
