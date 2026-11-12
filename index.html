@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1626" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="エイゴログ">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
+<title>エイゴログ</title>
+<style>
+/* ===== 色（明るい画面／暗い画面） ===== */
+:root{
+  --bg:#F4F6FA; --card:#FFFFFF; --ink:#14213D; --sub:#4A5672; --line:#D8DEEA;
+  --pri:#1E5BB8; --pri-ink:#FFFFFF; --pri-pale:#E3ECFA; --acc:#E07B16;
+  --ok:#1C8A4B; --ok-bg:#E1F3E8; --ng:#C53030; --ng-bg:#FBE4E4; --warn-bg:#FFF4E0;
+  --npc:#EAF0FA; --me:#1E5BB8; --me-ink:#FFFFFF;
+  --gold:#C29A12; --silver:#7D8A9C; --bronze:#B06A2C;
+  --shadow:0 1px 3px rgba(20,33,61,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1626; --card:#18233A; --ink:#EEF2FA; --sub:#B3BED4; --line:#2E3C5A;
+    --pri:#3A78DA; --pri-ink:#FFFFFF; --pri-pale:#1F2E4D; --acc:#F5A04A;
+    --ok:#52C486; --ok-bg:#15372A; --ng:#F07878; --ng-bg:#3D1D22; --warn-bg:#3A2C14;
+    --npc:#22304D; --me:#3A78DA; --me-ink:#FFFFFF; --shadow:none;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif;
+  font-size:17px;line-height:1.55;-webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+.en{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;letter-spacing:.01em}
+
+/* ===== 共通部品 ===== */
+#view{padding:12px 16px calc(96px + env(safe-area-inset-bottom))}
+body.full #view{padding:0}
+.top{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 10px}
+.top h1{font-size:22px;margin:0;font-weight:800}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:var(--pri-pale);color:var(--ink);font-size:14px;font-weight:600;border:0}
+.card{background:var(--card);border-radius:16px;padding:16px;margin:0 0 12px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.card h2{font-size:17px;margin:0 0 8px}
+.muted{color:var(--sub);font-size:15px}
+.small{font-size:14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border-radius:14px;border:0;
+  background:var(--pri);color:var(--pri-ink);font-size:18px;font-weight:700;padding:10px 16px;margin:0 0 10px}
+.btn.big{min-height:72px;font-size:20px}
+.btn.sub{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.btn.warn{background:var(--card);color:var(--ng);border:1.5px solid var(--ng)}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.banner{background:var(--warn-bg);border-radius:12px;padding:10px 12px;font-size:14px;margin:0 0 12px}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--acc);border-radius:99px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat div{background:var(--pri-pale);border-radius:12px;padding:8px;text-align:center}
+.stat b{display:block;font-size:22px}
+.stat span{font-size:12px;color:var(--sub)}
+select,input[type=text],textarea{width:100%;min-height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);padding:8px 12px;font-size:17px}
+label.f{display:block;font-weight:700;margin:12px 0 6px}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{flex:1;min-height:46px;border:0;background:var(--card);font-weight:600;font-size:15px}
+.seg button.on{background:var(--pri);color:var(--pri-ink)}
+table.kv{width:100%;border-collapse:collapse;font-size:15px}
+table.kv td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+table.kv td:first-child{color:var(--sub);width:42%}
+.ok{color:var(--ok)} .ng{color:var(--ng)}
+
+/* ===== 下のタブ ===== */
+#tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);
+  padding:4px env(safe-area-inset-right) calc(4px + env(safe-area-inset-bottom)) env(safe-area-inset-left);z-index:5}
+#tabs button{flex:1;border:0;background:none;padding:6px 0;font-size:12px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:54px}
+#tabs button b{font-size:24px;line-height:1}
+#tabs button.on{color:var(--pri);font-weight:700}
+body.full #tabs{display:none}
+
+/* ===== 旅マップ ===== */
+.route{position:relative;padding-left:8px}
+.cpt{display:flex;align-items:center;gap:12px;position:relative;padding:8px 0}
+.cpt:not(:last-child)::after{content:"";position:absolute;left:27px;top:60px;bottom:-8px;border-left:3px dotted var(--line)}
+.cpt .dot{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--card);border:2px solid var(--line);flex:none}
+.cpt.open .dot{border-color:var(--pri);background:var(--pri-pale)}
+.cpt.lock{opacity:.55}
+.cpt .t{font-weight:700}
+.cpt button{border:0;background:none;text-align:left;padding:0;flex:1;display:flex;align-items:center;gap:12px}
+.tag{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--line);margin-left:4px;font-weight:600}
+.tag.boss{background:var(--acc);color:#fff}
+
+/* ===== 会話画面 ===== */
+.screen{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.shead{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+.shead .x{width:44px;height:44px;border-radius:50%;border:0;background:var(--pri-pale);font-size:20px;flex:none}
+.shead .ttl{flex:1;font-weight:800;font-size:17px}
+.chat{flex:1;overflow-y:auto;padding:12px 12px 4px;-webkit-overflow-scrolling:touch}
+.msg{display:flex;gap:8px;margin:0 0 12px;align-items:flex-end}
+.msg .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;color:#fff}
+.msg .bub{max-width:80%;padding:10px 14px;border-radius:18px;background:var(--npc);font-size:18px}
+.msg .bub .ja{display:block;font-size:13px;color:var(--sub);margin-top:4px}
+.msg.me{justify-content:flex-end}
+.msg.me .bub{background:var(--me);color:var(--me-ink);border-bottom-right-radius:6px}
+.msg.npc .bub{border-bottom-left-radius:6px}
+.msg.sys{justify-content:center}
+.msg.sys .bub{background:transparent;font-size:13px;color:var(--sub);padding:2px 8px}
+.hidden-line{letter-spacing:.2em;color:var(--sub)}
+body.speaking .msg.npc.cur .av{animation:talk .6s infinite alternate}
+@keyframes talk{from{transform:scale(1)}to{transform:scale(1.12)}}
+.dock{background:var(--card);border-top:1px solid var(--line);padding:8px 12px calc(10px + env(safe-area-inset-bottom))}
+.tools{display:flex;gap:6px;margin-bottom:8px}
+.tools button{flex:1;min-height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:14px;font-weight:700;padding:2px}
+.tools button:disabled{opacity:.4}
+.hintbox{background:var(--warn-bg);border-radius:12px;padding:8px 12px;margin:0 0 8px;font-size:15px}
+.choices{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.choices button{border:1.5px solid var(--pri);background:var(--pri-pale);border-radius:99px;padding:8px 14px;font-size:16px;min-height:44px}
+.choices.ans button{flex:1 1 100%;border-radius:12px;min-height:52px;font-size:17px;text-align:left}
+.micwrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.mic{width:96px;height:96px;border-radius:50%;border:0;background:var(--acc);color:#fff;font-size:40px;box-shadow:0 4px 14px rgba(224,123,22,.35)}
+.mic.on{background:var(--ng);animation:pulse 1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(197,48,48,.5)}100%{box-shadow:0 0 0 22px rgba(197,48,48,0)}}
+.live{min-height:24px;font-size:15px;color:var(--sub);text-align:center}
+.kbd{display:flex;gap:8px}
+.kbd input{flex:1}
+.kbd button{flex:none;min-width:84px;border-radius:12px;border:0;background:var(--pri);color:var(--pri-ink);font-weight:700}
+
+/* ===== 発音チェック ===== */
+.pcard{padding:16px}
+.pen{font-size:26px;font-weight:700;margin:6px 0}
+.score{font-size:56px;font-weight:800;line-height:1}
+.w{display:inline-block;padding:2px 6px;margin:2px;border-radius:8px;font-size:20px;font-weight:600}
+.w.g{background:var(--ok-bg);color:var(--ok)}
+.w.r{background:var(--ng-bg);color:var(--ng);text-decoration:underline wavy}
+.w.x{background:var(--line);color:var(--sub)}
+
+/* ===== 振り返り ===== */
+.stamp{width:120px;height:120px;border-radius:50%;margin:8px auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:5px double currentColor;font-weight:800;transform:rotate(-8deg)}
+.stamp b{font-size:34px}
+.stamp.gold{color:var(--gold)} .stamp.silver{color:var(--silver)} .stamp.bronze{color:var(--bronze)}
+.turn{border-top:1px solid var(--line);padding:10px 0}
+.turn:first-child{border-top:0}
+.ex{display:flex;align-items:center;gap:6px;margin:4px 0}
+.ex button{border:0;background:var(--pri-pale);border-radius:99px;width:36px;height:36px;flex:none}
+
+/* ===== 診断 ===== */
+.vlist{max-height:320px;overflow:auto}
+.vrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.vrow span{flex:1}
+.vrow button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;min-height:38px;padding:0 10px;font-size:14px}
+textarea.log{min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+
+#toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:88%;
+  background:#14213D;color:#fff;padding:10px 16px;border-radius:12px;font-size:15px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:.95}
+</style>
+</head>
+<body>
+<main id="view"></main>
+<nav id="tabs">
+  <button data-act="tab" data-arg="home"><b>🏠</b>今日</button>
+  <button data-act="tab" data-arg="trip"><b>🗺️</b>旅</button>
+  <button data-act="tab" data-arg="settings"><b>⚙️</b>設定</button>
+</nav>
+<div id="toast"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
+
+<script>
+'use strict';
+const APP_VERSION = '2026.11.12-1';
+
+/* =====================================================================
+   教材データ（あとから足しやすいように、ここにまとめて書く）
+   ===================================================================== */
+const CONTENT = {
+  version: 1,
+
+  // 登場人物：gender は声の自動選択に使う（m=男性 f=女性）。pitch=声の高さ rate=話す速さの倍率
+  characters: {
+    officer: { name: 'Officer', ja: '入国審査官', emoji: '👮', color: '#2F5D9E', gender: 'm', pitch: 0.85, rate: 0.95 }
+  },
+
+  // 旅の行程（Stage → チェックポイント）。scenario がある所だけ遊べる（試作版は入国審査のみ）
+  stages: [
+    { id: 's1', title: 'Stage 1　空港・機内・入国・ホテル', checkpoints: [
+      { id: 'basics',      icon: '🧭', title: '出発前：旅の合言葉' },
+      { id: 'checkin',     icon: '🧳', title: '出発空港：チェックイン' },
+      { id: 'security',    icon: '🛃', title: '保安検査' },
+      { id: 'gate',        icon: '🚪', title: '搭乗ゲート' },
+      { id: 'meal',        icon: '🍱', title: '機内：食事と飲み物' },
+      { id: 'cabin',       icon: '💺', title: '機内：ちょっと困った' },
+      { id: 'immigration', icon: '🛂', title: '入国審査', boss: 'mid', scenario: 'sc_immigration',
+        mission: '入国審査を通過しよう', phrases: ['p_sorry','p_again','p_slowly','p_here_you_are','p_sightseeing','p_stay_days','p_stay_hotel','p_return_ticket','p_first_time','p_thank_you'] },
+      { id: 'baggage',     icon: '🎒', title: '手荷物受取・税関' },
+      { id: 'exchange',    icon: '💱', title: '両替所' },
+      { id: 'info',        icon: '🗺️', title: '到着ロビー：案内所' },
+      { id: 'hotel',       icon: '🏨', title: 'ホテル：チェックイン', boss: 'final' }
+    ]},
+    { id: 's2', title: 'Stage 2　レストラン・買い物', checkpoints: [] },
+    { id: 's3', title: 'Stage 3　道を聞く・交通機関', checkpoints: [] },
+    { id: 's4', title: 'Stage 4　自己紹介・雑談', checkpoints: [] },
+    { id: 's5', title: 'Stage 5　毎日の会話', checkpoints: [] }
+  ],
+
+  // フレーズ：en=英語 ja=日本語 cp=場面 frame=型（入れ替え練習用） alt=同じ意味の言い方 hear=よく言われる相手の言葉
+  phrases: {
+    p_sorry:        { en: 'Sorry?', ja: 'すみません、もう一度？（聞き返し）', cp: 'basics',
+                      hear: [{ en: 'May I see your passport?', ja: 'パスポートを拝見できますか？' }] },
+    p_again:        { en: 'Could you say that again?', ja: 'もう一度言っていただけますか？', cp: 'basics', alt: ['Again, please.', 'Pardon?'] },
+    p_slowly:       { en: 'Slowly, please.', ja: 'ゆっくりお願いします。', cp: 'basics', alt: ['Could you speak more slowly?'] },
+    p_here_you_are: { en: 'Here you are.', ja: 'はい、どうぞ。（物を渡すとき）', cp: 'immigration', alt: ['Here it is.', 'Sure.'],
+                      hear: [{ en: 'May I see your passport, please?', ja: 'パスポートを拝見できますか？' }] },
+    p_sightseeing:  { en: "I'm here for sightseeing.", ja: '観光で来ました。', cp: 'immigration', frame: "I'm here for ___.",
+                      alt: ['Sightseeing.', 'For sightseeing.', 'For travel.'],
+                      hear: [{ en: "What's the purpose of your visit?", ja: '訪問の目的は何ですか？' }] },
+    p_stay_days:    { en: "I'm staying for five days.", ja: '5日間滞在します。', cp: 'immigration', frame: "I'm staying for ___ days.",
+                      alt: ['Five days.', 'For one week.'],
+                      hear: [{ en: 'How long will you stay?', ja: 'どのくらい滞在しますか？' }] },
+    p_stay_hotel:   { en: "I'm staying at a hotel.", ja: 'ホテルに泊まります。', cp: 'immigration', frame: "I'm staying at ___.",
+                      alt: ['At a hotel.'],
+                      hear: [{ en: 'Where are you staying?', ja: 'どこに滞在しますか？' }] },
+    p_return_ticket:{ en: 'I have a return ticket.', ja: '帰りの航空券があります。', cp: 'immigration', alt: ['Yes, I do.'],
+                      hear: [{ en: 'Do you have a return ticket?', ja: '帰りの航空券はありますか？' }] },
+    p_first_time:   { en: "It's my first time.", ja: '初めてです。', cp: 'immigration', alt: ['Yes, first time.'],
+                      hear: [{ en: 'Is this your first time here?', ja: 'ここに来るのは初めてですか？' }] },
+    p_thank_you:    { en: 'Thank you very much.', ja: 'どうもありがとうございます。', cp: 'immigration', alt: ['Thank you.', 'Thanks.'] }
+  },
+
+  /* 会話シナリオ
+     nodes の各場面：
+       say=NPCのセリフ ja=意味 easy=「分かりません」と言われたときのやさしい言い換え
+       hint={ja:何と答えるか, first:最初の単語, model:お手本}  choices=言える答えの例  examples=自然な言い方（振り返り用）
+       intents=受け付ける答え：match は「単語のまとまり」の並び。まとまりの中は | で「どれか1つ」。全部のまとまりが入っていれば当たり（語順は問わない）
+               any:true は「何か答えていれば受け付ける」（自由に答える質問用）
+               slot:'duration' は日数を聞き取って reactions で反応を変える
+               reply=NPCの返事 next=次の場面（なければ会話終了） phrase=復習に入れるフレーズ */
+  scenarios: {
+    sc_immigration: {
+      cp: 'immigration', title: '入国審査', goal: '入国審査を通過しよう', npc: 'officer', boss: 'mid', start: 'n1', length: 6,
+      nodes: {
+        n1: { say: 'Hello. May I see your passport, please?', ja: 'こんにちは。パスポートを拝見できますか？', easy: 'Passport, please.',
+              hint: { ja: '「はい、どうぞ」と渡す', first: 'Here', model: 'Here you are.' },
+              choices: ['Here you are.', 'Here it is.'], examples: ['Here you are.', 'Here it is.', 'Sure. Here you are.'], phrase: 'p_here_you_are',
+              intents: [ { id: 'give', match: [['here'], ['sure'], ['ok|okay|yes|yeah']], reply: 'Thank you.', next: 'n2' } ] },
+        n2: { say: "What's the purpose of your visit?", ja: '訪問の目的は何ですか？', easy: 'Why are you here? Sightseeing? Business?',
+              hint: { ja: '「観光です」と答える', first: 'Sightseeing', model: "I'm here for sightseeing." },
+              choices: ['Sightseeing.', "I'm here for sightseeing.", 'Business.'], examples: ["I'm here for sightseeing.", 'Sightseeing.', 'For vacation.'],
+              intents: [
+                { id: 'visit', match: [['visit|visiting|see|meet', 'family|friend|friends|sister|brother|son|daughter|mother|father|parents|wife|husband|cousin|aunt|uncle']], reply: 'Oh, nice.', next: 'n2c' },
+                { id: 'business', match: [['business|work|working|meeting|conference']], reply: 'Business. I see.', next: 'n2b' },
+                { id: 'sightseeing', match: [['sightseeing|sightsee|sight|travel|traveling|travelling|vacation|holiday|trip|tourism|tourist|tour|fun|visit|visiting']], reply: 'Sightseeing. Nice.', next: 'n3', phrase: 'p_sightseeing' }
+              ] },
+        n2b:{ say: 'What kind of business?', ja: 'どんなお仕事ですか？', easy: 'What do you do here?',
+              hint: { ja: '「会議があります」と答える', first: 'I', model: 'I have a meeting.' },
+              choices: ['I have a meeting.', "I'm here for a meeting."], examples: ['I have a meeting.', "I'm here for a meeting.", 'For work.'],
+              intents: [ { id: 'any', any: true, min: 1, reply: 'I see.', next: 'n3' } ] },
+        n2c:{ say: 'Where do they live?', ja: 'その方はどこに住んでいますか？', easy: 'Which city?',
+              hint: { ja: '「ニューヨークです」と答える', first: 'In', model: 'In New York.' },
+              choices: ['In New York.', 'In Boston.'], examples: ['In New York.', 'They live in Boston.', 'Near here.'],
+              intents: [ { id: 'any', any: true, min: 1, reply: 'OK.', next: 'n3' } ] },
+        n3: { say: 'How long will you stay?', ja: 'どのくらい滞在しますか？', easy: 'How many days?',
+              hint: { ja: '「5日間です」と答える', first: 'Five', model: "I'm staying for five days." },
+              choices: ['Five days.', 'For one week.', "I'm staying for five days."], examples: ['Five days.', 'For one week.', "I'm staying for five days."], phrase: 'p_stay_days',
+              intents: [ { id: 'duration', slot: 'duration', next: 'n4' } ],
+              reactions: [ { max: 3, say: 'Just a short trip. OK.' }, { max: 14, say: '{dur}. OK.' }, { max: 99999, say: "{dur}? That's a long stay.", next: 'n3b' } ] },
+        n3b:{ say: 'Do you have a return ticket?', ja: '帰りの航空券はありますか？', easy: 'A ticket to go home. Do you have one?',
+              hint: { ja: '「はい、あります」と答える', first: 'Yes', model: 'Yes, I have a return ticket.' },
+              choices: ['Yes, I do.', 'Yes, I have a return ticket.'], examples: ['Yes, I do.', 'Yes, I have a return ticket.', 'Yes, here it is.'], phrase: 'p_return_ticket',
+              intents: [
+                { id: 'no', match: [['no|not|nope']], reply: "Please get one before you leave. OK.", next: 'n4' },
+                { id: 'yes', match: [['yes|yeah|sure|do|have|here']], reply: 'Good.', next: 'n4' }
+              ] },
+        n4: { say: 'Where are you staying?', ja: 'どこに滞在しますか？', easy: 'A hotel? A friend\'s house?',
+              hint: { ja: '「ホテルです」と答える', first: 'At', model: "I'm staying at a hotel." },
+              choices: ['At a hotel.', "I'm staying at a hotel.", "At my friend's house."], examples: ['At a hotel.', "I'm staying at a hotel.", "At my friend's house."],
+              intents: [
+                { id: 'hotel', match: [['hotel|inn|motel|hostel|airbnb|apartment|resort']], reply: 'A hotel. OK.', next: 'n5', phrase: 'p_stay_hotel' },
+                { id: 'friend', match: [['friend|friends|family|sister|brother|son|daughter|house|home|aunt|uncle|cousin']], reply: 'OK.', next: 'n5' },
+                { id: 'any', any: true, min: 2, reply: 'OK.', next: 'n5' }
+              ] },
+        n5: { say: 'Is this your first time here?', ja: 'ここに来るのは初めてですか？', easy: 'Did you come here before?',
+              hint: { ja: '「はい、初めてです」と答える', first: 'Yes', model: "Yes, it's my first time." },
+              choices: ["Yes, it's my first time.", "No, it's my second time."], examples: ["Yes, it's my first time.", 'Yes, first time.', "No, it's my second time."], phrase: 'p_first_time',
+              intents: [
+                { id: 'again', match: [['second|third|before|times|twice'], ['no|nope']], reply: 'Welcome back!', next: 'n6' },
+                { id: 'first', match: [['yes|first|yeah']], reply: 'Oh, great.', next: 'n6' }
+              ] },
+        n6: { say: "OK. Here's your passport. Enjoy your stay!", ja: 'はい、パスポートをお返しします。滞在を楽しんでください！', easy: 'Here is your passport. Have a good time!',
+              hint: { ja: 'お礼を言う', first: 'Thank', model: 'Thank you.' },
+              choices: ['Thank you.', 'Thank you very much.'], examples: ['Thank you.', 'Thank you very much.', 'Thanks!'], phrase: 'p_thank_you',
+              intents: [ { id: 'thanks', match: [['thank|thanks']], reply: "You're welcome." }, { id: 'any', any: true, min: 1, reply: 'Have a nice day.' } ] }
+      }
+    }
+  }
+};
+
+// どの場面でも使える言葉（聞き返し）
+const GLOBAL_INTENTS = [
+  { kind: 'slow',   match: [['slow|slowly|slower']] },
+  { kind: 'dont',   match: [['understand'], ['what', 'mean'], ['do not know']] },
+  { kind: 'repeat', match: [['sorry'], ['pardon'], ['again'], ['repeat'], ['what'], ['excuse']] }
+];
+
+/* =====================================================================
+   小さな道具
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const today = () => ymd(new Date());
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return ymd(d); };
+const T0 = Date.now();
+let toastTimer;
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
+const DIAG = [];
+function diag(msg) { DIAG.push(((Date.now() - T0) / 1000).toFixed(2) + 's ' + msg); if (DIAG.length > 300) DIAG.shift(); if (screen === 'diag') { const l = $('#diaglog'); if (l) l.value = DIAG.join('\n'); } }
+const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+const ctxKey = () => isStandalone() ? 'standalone' : 'browser';
+const findCp = id => { for (const s of CONTENT.stages) for (const c of s.checkpoints) if (c.id === id) return c; return null; };
+
+/* =====================================================================
+   保存（iPhoneのブラウザの中）
+   ===================================================================== */
+const KEY = 'eigolog_v1';
+const DEFAULT = () => ({
+  ver: 1,
+  player: { name: '', xp: 0, createdAt: today() },
+  srs: {},       // 復習の予定（フレーズごと）
+  cp: {},        // チェックポイントの成績
+  days: {},      // 1日ごとの記録
+  settings: { rate: 'auto', voice: '', charVoices: {}, inputMode: 'auto' },
+  sys: { micBroken: { browser: 0, standalone: 0 }, lastBackup: '' }
+});
+function merge(a, b) {
+  for (const k in b) {
+    if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) a[k] = merge(a[k], b[k]);
+    else a[k] = b[k];
+  }
+  return a;
+}
+function load() { try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && j.ver) return merge(DEFAULT(), j); } catch (e) {} return DEFAULT(); }
+let S = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('保存できませんでした（空き容量を確認してください）'); } }
+function day(d = today()) { return S.days[d] = Object.assign({ sec: 0, xp: 0, pron: [], pronPassed: [], listen: [0, 0], turns: 0, hintFreeTurns: 0, convs: 0, done: false }, S.days[d] || {}); }
+
+// レベル：次のレベルまでの必要XPは 100, 150, 200 …と少しずつ増える
+function levelInfo(xp) { let L = 1, need = 100, acc = 0; while (xp >= acc + need) { acc += need; L++; need = 100 + 50 * (L - 1); } return { L, into: xp - acc, need }; }
+const TITLES = [[1, 'はじめての旅人'], [3, '空港になれた旅人'], [5, '機内の常連'], [8, '入国のプロ'], [12, '街歩きの旅人'], [18, '話せる旅人'], [25, '世界の旅人']];
+const titleOf = L => TITLES.filter(t => L >= t[0]).pop()[1];
+function addXP(n) { S.player.xp += n; day().xp += n; }
+function streak() {
+  let n = 0, d = today();
+  const studied = k => S.days[k] && (S.days[k].sec > 0 || S.days[k].xp > 0);
+  if (!studied(d)) d = addDays(d, -1);
+  while (studied(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+
+// 学習時間を測る（画面を離れている間は数えない）
+let studyT0 = 0, studyPaused = false;
+function studyStart() { studyT0 = Date.now(); }
+function studyStop() { if (!studyT0) return; day().sec += Math.min(900, Math.round((Date.now() - studyT0) / 1000)); studyT0 = 0; save(); }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (studyT0) { studyStop(); studyPaused = true; } save(); }
+  else if (studyPaused) { studyPaused = false; studyStart(); }
+});
+
+/* 間隔反復（SM-2の簡易版）
+   q: 5=すぐ正解 4=正解 3=ヒントで正解 1=不正解。間隔21日以上で「定着」 */
+function srsGrade(id, q) {
+  const r = S.srs[id] || { ef: 2.5, interval: 0, reps: 0, lapses: 0 };
+  if (q < 3) { r.reps = 0; r.interval = 1; r.lapses++; }
+  else { r.reps++; r.interval = r.reps === 1 ? 1 : r.reps === 2 ? 6 : Math.round(r.interval * r.ef); }
+  r.ef = Math.max(1.3, r.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+  r.due = addDays(today(), r.interval); r.last = today();
+  S.srs[id] = r;
+}
+
+/* =====================================================================
+   英語を整える・比べる
+   ===================================================================== */
+const CONTRACTIONS = [
+  ["i'm", 'i am'], ["you're", 'you are'], ["we're", 'we are'], ["they're", 'they are'], ["he's", 'he is'], ["she's", 'she is'],
+  ["it's", 'it is'], ["that's", 'that is'], ["what's", 'what is'], ["where's", 'where is'], ["here's", 'here is'], ["there's", 'there is'],
+  ["how's", 'how is'], ["let's", 'let us'], ["can't", 'can not'], ['cannot', 'can not'], ["won't", 'will not'], ["don't", 'do not'],
+  ["doesn't", 'does not'], ["didn't", 'did not'], ["isn't", 'is not'], ["aren't", 'are not'], ["wasn't", 'was not'], ["weren't", 'were not'],
+  ["haven't", 'have not'], ["i'll", 'i will'], ["you'll", 'you will'], ["we'll", 'we will'], ["i've", 'i have'], ["i'd", 'i would'],
+  ["you've", 'you have'], ["couldn't", 'could not'], ["wouldn't", 'would not'], ['gonna', 'going to'], ['wanna', 'want to']
+].map(([a, b]) => [new RegExp('\\b' + a + '\\b', 'g'), b]);
+const ONES = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const TENS = ['', '', 'twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function numWords(n) {
+  if (n < 20) return ONES[n];
+  if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? ' ' + ONES[n % 10] : '');
+  if (n < 1000) return ONES[Math.floor(n / 100)] + ' hundred' + (n % 100 ? ' ' + numWords(n % 100) : '');
+  return String(n);
+}
+// 文を「小文字の単語の並び」にする
+function normalize(s) {
+  s = String(s || '').toLowerCase().replace(/[’‘`´]/g, "'");
+  for (const [re, b] of CONTRACTIONS) s = s.replace(re, b);
+  s = s.replace(/'s\b/g, '').replace(/'/g, '');
+  s = s.replace(/\b\d+\b/g, m => numWords(Number(m)));
+  s = s.replace(/[^a-z\s]/g, ' ');
+  return s.split(/\s+/).filter(Boolean).map(w => (w === 'ok' ? 'okay' : w));
+}
+function lev(a, b) {
+  const m = a.length, n = b.length; let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[n];
+}
+// 長い単語は1文字違いまで同じとみなす（聞き違いへの備え）
+function wordEq(a, b) { if (a === b) return true; return a.length >= 5 && b.length >= 5 && Math.abs(a.length - b.length) <= 1 && lev(a, b) <= 1; }
+function matchPattern(pattern, words) {
+  const joined = ' ' + words.join(' ') + ' ';
+  return pattern.every(group => group.split('|').some(alt => {
+    const aw = normalize(alt); if (!aw.length) return false;
+    if (aw.length > 1) return joined.includes(' ' + aw.join(' ') + ' ');
+    return words.some(w => wordEq(w, aw[0]));
+  }));
+}
+
+// 日数の聞き取り（five days / one week / a couple of days / 10 nights …）
+const NUMW = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40,
+  fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100, a: 1, an: 1, couple: 2, few: 3, several: 4 };
+const VAGUE = ['couple', 'few', 'several'];
+function extractDuration(w) {
+  const units = { day: 1, days: 1, night: 1, nights: 1, week: 7, weeks: 7, month: 30, months: 30 };
+  const toNum = seq => { const v = seq.find(s => VAGUE.includes(s)); if (v) return NUMW[v]; const n = seq.filter(s => s !== 'a' && s !== 'an').reduce((a, s) => a + NUMW[s], 0); return n || (seq.length ? 1 : null); };
+  for (let i = 0; i < w.length; i++) {
+    const u = units[w[i]]; if (!u) continue;
+    const seq = [];
+    for (let j = i - 1; j >= Math.max(0, i - 4); j--) { if (w[j] === 'of') continue; if (w[j] in NUMW) seq.unshift(w[j]); else break; }
+    const n = toNum(seq); if (!n) continue;
+    return { n, unit: w[i].replace(/s$/, ''), days: n * u };
+  }
+  // 「Five.」のように数だけのときは日数とみなす
+  if (w.length <= 4) { const seq = w.filter(x => x in NUMW && x !== 'a' && x !== 'an'); if (seq.length) { const n = toNum(seq); if (n) return { n, unit: 'day', days: n }; } }
+  return null;
+}
+const durText = d => `${d.n} ${d.unit}${d.n > 1 ? 's' : ''}`;
+
+/* 発音チェック：お手本と聞き取った英語を単語ごとに比べる（最長共通部分列で対応づけ） */
+const STOP = new Set(['a','an','the','is','am','are','was','were','be','to','of','for','at','in','on','and','i','you','it','my','your','this','that','do','please','very']);
+function align(exp, got) {
+  const n = exp.length, m = got.length; const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = wordEq(exp[i], got[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const okE = new Array(n).fill(false), okG = new Array(m).fill(false); let i = 0, j = 0;
+  while (i < n && j < m) { if (wordEq(exp[i], got[j])) { okE[i] = okG[j] = true; i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++; }
+  return { okE, okG };
+}
+// 元の文の単語（I'm など）ごとに、整えた単語のどれに当たるかを記録しておく
+function tokenize(text) {
+  const toks = String(text).split(/\s+/).filter(Boolean); const words = [], owner = [];
+  toks.forEach((t, ti) => normalize(t).forEach(w => { words.push(w); owner.push(ti); }));
+  return { toks, words, owner };
+}
+function scorePron(expected, alts) {
+  const E = tokenize(expected); let best = null;
+  for (let alt of alts) {
+    // 「sight seeing」のように1語が2語に分かれて聞き取られたときは、くっつけて比べる
+    const ew = E.words.filter(w => w.length >= 6);
+    const tk = String(alt).split(/\s+/).filter(Boolean), merged = [];
+    for (let i = 0; i < tk.length; i++) {
+      const j = (tk[i] + (tk[i + 1] || '')).toLowerCase().replace(/[^a-z]/g, '');
+      if (i + 1 < tk.length && ew.some(w => wordEq(w, j))) { merged.push(tk[i] + tk[i + 1]); i++; } else merged.push(tk[i]);
+    }
+    alt = merged.join(' ');
+    const G = tokenize(alt); const { okE, okG } = align(E.words, G.words);
+    const hit = okE.filter(Boolean).length; const score = E.words.length ? Math.round(hit / E.words.length * 100) : 0;
+    const content = E.words.map((w, i) => [w, i]).filter(([w]) => !STOP.has(w));
+    const cHit = content.filter(([, i]) => okE[i]).length;
+    const cRatio = content.length ? cHit / content.length : hit / Math.max(1, E.words.length);
+    const pass = cRatio >= 0.8 && score >= 50;
+    const r = { alt, score, pass, E, G, okE, okG };
+    if (!best || score > best.score) best = r;
+  }
+  return best;
+}
+function tokHtml(T, ok) {
+  return T.toks.map((t, ti) => { const idx = T.owner.map((o, i) => o === ti ? i : -1).filter(i => i >= 0); if (!idx.length) return `<span class="w x en">${esc(t)}</span>`;
+    const good = idx.every(i => ok[i]); return `<span class="w ${good ? 'g' : 'r'} en">${esc(t)}</span>`; }).join('');
+}
+
+/* =====================================================================
+   読み上げ（スピーカー）
+   ===================================================================== */
+const hasTTS = 'speechSynthesis' in window;
+let voices = [];
+const NOVELTY = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|junior|ralph|kathy|fred)\b/i;
+const LOWQ = /\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
+const FEMALE = /\b(samantha|ava|allison|susan|zoe|nicky|joelle|noelle|victoria|karen|moira|tessa|kathy|shelley|sandy|flo|grandma|aria|jenny|michelle|zira|female|emma|sara|libby|sonia|serena|kate|fiona|catherine|nora|ellie|ana|jane|nancy|amber|ashley|cora|elizabeth|monica)\b/i;
+const MALE = /\b(alex|tom|evan|nathan|aaron|fred|daniel|rishi|reed|rocko|eddy|grandpa|ralph|guy|christopher|eric|mark|david|male|james|oliver|arthur|gordon|lee|ryan|steffan|davis|tony|jason|roger|brian|andrew|brandon|jacob|thomas)\b/i;
+const vText = v => (v.name || '') + ' ' + (v.voiceURI || '');
+const genderOf = v => FEMALE.test(v.name) ? 'f' : MALE.test(v.name) ? 'm' : '';
+function voiceScore(v) {
+  const n = vText(v), lang = (v.lang || '').replace('_', '-');
+  let s = 0;
+  if (/^en-US/i.test(lang)) s += 100; else if (/^en/i.test(lang)) s += 40; else return -9999;
+  if (NOVELTY.test(v.name)) s -= 1000;
+  if (LOWQ.test(v.name) || /eloquence/i.test(n)) s -= 30;
+  if (/premium/i.test(n)) s += 50;
+  if (/enhanced|拡張/i.test(n)) s += 35;
+  if (/natural|neural/i.test(n)) s += 40;
+  if (/compact/i.test(n)) s -= 10;
+  if (/google/i.test(n)) s += 20;
+  if (/\b(samantha|ava|allison|evan|nathan|zoe|tom|alex|aaron|nicky|susan|joelle|noelle)\b/i.test(v.name)) s += 10;
+  if (v.localService) s += 2;
+  return s;
+}
+function vLabel(v) {
+  const n = vText(v);
+  const q = /premium/i.test(n) ? 'プレミアム' : /enhanced/i.test(n) ? '高品質' : /natural|neural/i.test(n) ? '自然' : /compact/i.test(n) ? '標準' : '';
+  const g = genderOf(v);
+  return `${v.name}${q && !v.name.includes('(') ? '（' + q + '）' : ''}${g === 'f' ? ' ♀' : g === 'm' ? ' ♂' : ''}　${v.lang}`;
+}
+function refreshVoices() {
+  if (!hasTTS) return;
+  const seen = new Set();
+  voices = speechSynthesis.getVoices().filter(v => /^en/i.test((v.lang || '').replace('_', '-')))
+    .filter(v => { const k = v.voiceURI || v.name; if (seen.has(k)) return false; seen.add(k); return true; })
+    .sort((a, b) => voiceScore(b) - voiceScore(a));
+}
+const byURI = uri => uri ? voices.find(v => (v.voiceURI || v.name) === uri) : null;
+const vKey = v => v ? (v.voiceURI || v.name) : '';
+const goodVoices = () => voices.filter(v => voiceScore(v) > 0);
+function narratorVoice() { return byURI(S.settings.voice) || goodVoices()[0] || voices[0] || null; }
+// 登場人物の声：指定がなければ「性別が合って、お手本の声とは別の、いちばん良い声」。合う声がなければ高さを変えて別人らしくする
+function voiceFor(who) {
+  if (who === 'narrator') return { v: narratorVoice(), pitch: 1, rate: 1 };
+  const ch = CONTENT.characters[who] || { gender: '', pitch: 1, rate: 1 };
+  const set = byURI(S.settings.charVoices[who]);
+  if (set) return { v: set, pitch: 1 + (ch.pitch - 1) * 0.4, rate: ch.rate };
+  const nar = narratorVoice(); const pool = goodVoices();
+  let v = pool.find(x => genderOf(x) === ch.gender && x !== nar);
+  if (v) return { v, pitch: 1 + (ch.pitch - 1) * 0.4, rate: ch.rate };
+  v = pool.find(x => x !== nar) || nar;
+  return { v, pitch: ch.pitch, rate: ch.rate };
+}
+let speakSeq = 0;
+function setSpeaking(on) { document.body.classList.toggle('speaking', on); }
+function speak(text, { who = 'narrator', rate = 0.85 } = {}) {
+  return new Promise(resolve => {
+    if (!hasTTS || !text) { resolve(); return; }
+    const my = ++speakSeq;
+    const busy = speechSynthesis.speaking || speechSynthesis.pending;
+    speechSynthesis.cancel();
+    const a = voiceFor(who); const u = new SpeechSynthesisUtterance(text);
+    if (a.v) u.voice = a.v;
+    u.lang = 'en-US'; u.pitch = a.pitch; u.rate = Math.max(0.5, Math.min(1.4, rate * a.rate));
+    let done = false;
+    const fin = () => { if (done) return; done = true; clearTimeout(t); if (my === speakSeq) setSpeaking(false); resolve(); };
+    u.onend = fin; u.onerror = e => { diag('tts error: ' + (e.error || '')); fin(); };
+    const t = setTimeout(fin, 3000 + text.split(/\s+/).length * 700 / u.rate);
+    setSpeaking(true);
+    // 前の読み上げを止めた直後は、iPhoneで次が無視されることがあるので少し待つ
+    if (busy) setTimeout(() => { if (my === speakSeq) speechSynthesis.speak(u); else fin(); }, 80);
+    else speechSynthesis.speak(u);
+  });
+}
+function stopSpeaking() { speakSeq++; if (hasTTS) speechSynthesis.cancel(); setSpeaking(false); }
+// iPhoneは最初の読み上げを「指で触ったとき」にしか許さないので、最初のタップで無音を1回読ませておく
+let ttsUnlocked = false;
+function unlockTTS() { if (ttsUnlocked || !hasTTS) return; ttsUnlocked = true; try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+document.addEventListener('touchend', unlockTTS, { passive: true });
+document.addEventListener('click', unlockTTS);
+
+/* =====================================================================
+   聞き取り（マイク）と、答え方の切り替え
+   ===================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+// 今の答え方：mic=マイク keyboard=キーボード（iPhoneのキーボードの音声入力） offline=選択式
+function inputMode() {
+  if (!navigator.onLine) return 'offline';
+  const m = S.settings.inputMode;
+  if (m === 'keyboard' || !SR) return 'keyboard';
+  if (m === 'auto' && (S.sys.micBroken[ctxKey()] || 0) >= 2) return 'keyboard';
+  return 'mic';
+}
+const MODE_LABEL = { mic: '🎤 マイク', keyboard: '⌨️ キーボード', offline: '📴 オフライン（選択式）' };
+let rec = null;
+function listen({ onInterim, timeout = 9000 } = {}) {
+  return new Promise(resolve => {
+    let r;
+    try { r = new SR(); } catch (e) { resolve({ alts: [], err: 'create-failed', started: false }); return; }
+    rec = r; r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 3; r.continuous = false;
+    let alts = [], interim = '', started = false, err = null, done = false;
+    const finish = () => { if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); if (rec === r) rec = null; if (!alts.length && interim) alts = [interim]; diag('listen done: ' + JSON.stringify(alts) + (err ? ' err=' + err : '')); resolve({ alts, err, started }); };
+    r.onstart = () => { started = true; diag('mic start'); };
+    r.onaudiostart = () => diag('audio start');
+    r.onspeechstart = () => diag('speech start');
+    r.onspeechend = () => diag('speech end');
+    r.onresult = e => {
+      const fin = []; let it = '', finText = '';
+      for (let i = 0; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) { finText += res[0].transcript + ' '; if (e.results.length === 1) for (let j = 0; j < res.length; j++) fin.push(res[j].transcript); }
+        else it += res[0].transcript;
+      }
+      if (finText.trim()) { alts = fin.length ? fin : [finText.trim()]; interim = alts[0]; }
+      else interim = it;
+      onInterim && onInterim(interim);
+      if (finText.trim()) { try { r.stop(); } catch (_) {} }
+    };
+    r.onerror = e => { err = e.error || 'error'; diag('mic error: ' + err); };
+    r.onnomatch = () => diag('nomatch');
+    r.onend = () => { diag('mic end'); finish(); };
+    const t1 = setTimeout(() => { if (!started) { err = err || 'start-timeout'; diag('start timeout'); try { r.abort(); } catch (_) {} finish(); } }, 4000);
+    const t2 = setTimeout(() => { diag('listen timeout'); try { r.stop(); } catch (_) {} setTimeout(finish, 1500); }, timeout);
+    try { r.start(); diag('start() called'); } catch (e) { err = 'start-failed'; diag('start failed: ' + e.message); finish(); }
+  });
+}
+function stopListening() { if (rec) { try { rec.stop(); } catch (_) {} } }
+// マイクで1回聞く。使えなかったら回数を数え、2回続いたらキーボード方式へ自動で切り替える
+let listening = false;
+async function micListen(onInterim) {
+  stopSpeaking(); listening = true;
+  const r = await listen({ onInterim });
+  listening = false;
+  const hard = ['not-allowed', 'service-not-allowed', 'start-timeout', 'start-failed', 'create-failed', 'audio-capture'];
+  if (r.err && hard.includes(r.err) && !r.alts.length) {
+    const k = ctxKey(); S.sys.micBroken[k] = (S.sys.micBroken[k] || 0) + 1; save();
+    if (S.settings.inputMode === 'auto' && S.sys.micBroken[k] >= 2) toast('マイク方式が使えないため、キーボード方式に切り替えました', 4500);
+    else toast(r.err === 'not-allowed' ? 'マイクが許可されていません。もう一度押して「許可」を選んでください' : 'マイクが使えませんでした。もう一度押してみてください', 4000);
+    return null;
+  }
+  if (r.err === 'network') { toast('ネットにつながらず聞き取れませんでした'); return null; }
+  if (!r.alts.length) { toast('聞こえませんでした。もう一度どうぞ'); return null; }
+  if (S.sys.micBroken[ctxKey()]) { S.sys.micBroken[ctxKey()] = 0; save(); }
+  await sleep(250); // マイクから読み上げへの切り替えを待つ
+  return r.alts;
+}
+window.addEventListener('online', () => { toast('ネットにつながりました'); refreshDock(); });
+window.addEventListener('offline', () => { toast('オフラインです。聞き取り・選択式で練習します', 3500); refreshDock(); });
+
+/* =====================================================================
+   画面
+   ===================================================================== */
+let screen = 'home';
+function go(s) { screen = s; document.body.classList.toggle('full', ['conv', 'pron', 'review'].includes(s)); render(); window.scrollTo(0, 0); }
+function render() {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.arg === screen || (screen === 'diag' && b.dataset.arg === 'settings')));
+  const f = { home: vHome, trip: vTrip, settings: vSettings, diag: vDiag, conv: vConv, pron: vPron, review: vReview }[screen] || vHome;
+  $('#view').innerHTML = f();
+  if (screen === 'conv' && C) renderConvBody();
+  if (screen === 'pron' && P) renderPronDock();
+  if (screen === 'diag') { const l = $('#diaglog'); if (l) l.value = DIAG.join('\n'); }
+}
+function header() {
+  const li = levelInfo(S.player.xp); const st = streak();
+  return `<div class="top"><h1>✈️ エイゴログ</h1><div><span class="chip">Lv.${li.L}</span> <span class="chip">🔥${st}日</span></div></div>`;
+}
+function currentMission() {
+  for (const s of CONTENT.stages) for (const c of s.checkpoints) if (c.scenario && !(S.cp[c.id] && S.cp[c.id].best)) return c;
+  return findCp('immigration');
+}
+function stampEmoji(b) { return b === 'gold' ? '🥇' : b === 'silver' ? '🥈' : b === 'bronze' ? '🥉' : ''; }
+function tripPercent() { let all = 0, done = 0; for (const s of CONTENT.stages) for (const c of s.checkpoints) { all++; if (S.cp[c.id] && S.cp[c.id].best) done++; } return all ? Math.round(done / all * 100) : 0; }
+
+function vHome() {
+  const m = currentMission(); const li = levelInfo(S.player.xp); const d = S.days[today()]; const cp = S.cp[m.id] || {};
+  const mode = inputMode();
+  return header() + `
+  <div class="banner">🧪 試作版（段階1）：入国審査の会話1本と発音チェックで、iPhoneの音声まわりを確かめる版です。</div>
+  <div class="card">
+    <div class="muted">今日のミッション</div>
+    <h2 style="font-size:21px;margin:4px 0 10px">${m.icon} ${esc(m.mission || m.title)}</h2>
+    <div class="muted small">旅程 ${tripPercent()}%</div>
+    <div class="bar" style="margin:4px 0 12px"><i style="width:${Math.max(2, tripPercent())}%"></i></div>
+    <button class="btn big" data-act="startConv" data-arg="${m.scenario}">🗣️ 会話をはじめる</button>
+    <button class="btn sub" data-act="startPron" data-arg="${m.id}">📢 発音チェック（${m.title}のフレーズ）</button>
+  </div>
+  <div class="card">
+    <div class="stat">
+      <div><b>${li.L}</b><span>レベル</span></div>
+      <div><b>${S.player.xp}</b><span>XP</span></div>
+      <div><b>${stampEmoji(cp.best) || '—'}</b><span>入国審査</span></div>
+    </div>
+    <div class="muted small" style="margin-top:10px">${titleOf(li.L)}　次のレベルまで ${li.need - li.into} XP</div>
+    <div class="bar" style="margin-top:4px"><i style="width:${Math.round(li.into / li.need * 100)}%"></i></div>
+    ${d ? `<div class="muted small" style="margin-top:10px">今日：${Math.round(d.sec / 60)}分・XP +${d.xp}</div>` : ''}
+  </div>
+  <div class="card">
+    <div class="row" style="align-items:center"><div>答え方：<b>${MODE_LABEL[mode]}</b></div><button class="chip" style="flex:none" data-act="tab" data-arg="settings">変える</button></div>
+    <button class="btn sub" style="margin:10px 0 0" data-act="tab" data-arg="diag">🩺 音声の診断</button>
+  </div>`;
+}
+
+function vTrip() {
+  let h = header() + `<div class="muted" style="margin:0 0 8px">チェックポイントをクリアすると、次の場所が開きます。</div>`;
+  for (const s of CONTENT.stages) {
+    h += `<div class="card"><h2>${esc(s.title)}</h2>`;
+    if (!s.checkpoints.length) { h += `<div class="muted">🔒 準備中</div></div>`; continue; }
+    h += `<div class="route">`;
+    for (const c of s.checkpoints) {
+      const st = S.cp[c.id] || {}; const open = !!c.scenario;
+      const tag = c.boss === 'mid' ? '<span class="tag boss">中ボス</span>' : c.boss === 'final' ? '<span class="tag boss">ボス</span>' : '';
+      h += `<div class="cpt ${open ? 'open' : 'lock'}">${open ? `<button data-act="startConv" data-arg="${c.scenario}">` : '<div style="display:flex;align-items:center;gap:12px">'}
+        <div class="dot">${c.icon}</div><div><div class="t">${esc(c.title)} ${tag}</div>
+        <div class="muted small">${open ? (st.best ? `${stampEmoji(st.best)} クリア済み・${st.plays}回` : 'タップして会話') : '準備中'}</div></div>
+        ${open ? '</button>' : '</div>'}</div>`;
+    }
+    h += `</div></div>`;
+  }
+  return h;
+}
+
+/* ---------- 会話 ---------- */
+let C = null;
+function startConv(scId) {
+  const sc = CONTENT.scenarios[scId]; if (!sc) return;
+  const cp = S.cp[sc.cp] || {};
+  // 難しさ：1回目=ゆっくり＋選択肢あり、2回目〜=やや速め、銀以上を取った後=普通の速さ
+  const diff = (cp.best === 'gold' || cp.best === 'silver') ? 2 : (cp.plays || 0) > 0 ? 1 : 0;
+  const rate = S.settings.rate === 'auto' ? [0.7, 0.85, 1.0][diff] : Number(S.settings.rate);
+  C = { scId, sc, diff, rate, log: [], turns: [], node: null, turn: null, asks: 0, askKinds: new Set(), busy: false, ended: false, t0: Date.now() };
+  studyStart(); go('conv'); gotoNode(sc.start, '');
+}
+const curNode = () => C.sc.nodes[C.node];
+async function gotoNode(id, preface) {
+  C.log.forEach(e => e.cur = false);
+  const n = C.sc.nodes[id]; C.node = id;
+  C.turn = { nodeId: id, said: '', tries: [], hint: 0, revealed: false, misses: 0, asks: 0 };
+  const line = (preface ? preface + ' ' : '') + n.say;
+  C.log.push({ who: 'npc', text: line, ja: n.ja, cur: true });
+  renderConvBody();
+  await npcSay(line, C.rate);
+}
+function npcSay(text, rate) { return speak(text, { who: C.sc.npc, rate }); }
+function scrollChat() { const c = $('#chat'); if (c) c.scrollTop = c.scrollHeight; }
+function vConv() {
+  const ch = CONTENT.characters[C.sc.npc]; const cp = findCp(C.sc.cp);
+  return `<div class="screen">
+    <div class="shead"><button class="x" data-act="quitConv" aria-label="やめる">✕</button>
+      <div class="ttl">${cp.icon} ${esc(C.sc.title)}</div><span class="chip">${ch.emoji} ${esc(ch.ja)}</span></div>
+    <div class="chat" id="chat"></div>
+    <div class="dock" id="dock"></div>
+  </div>`;
+}
+function renderConvBody() {
+  if (screen !== 'conv' || !C || !C.turn) return;
+  const ch = CONTENT.characters[C.sc.npc];
+  $('#chat').innerHTML = `<div class="msg sys"><div class="bub">🎯 目的：${esc(C.sc.goal)}　（速さ ${C.rate}）</div></div>` + C.log.map(e => {
+    if (e.who === 'npc') {
+      const hide = e.cur && !C.turn.revealed;
+      return `<div class="msg npc ${e.cur ? 'cur' : ''}"><div class="av" style="background:${ch.color}">${ch.emoji}</div>
+        <div class="bub" ${hide ? 'data-act="replay"' : ''}>${hide ? '<span class="hidden-line">🔊 ・・・・・</span><span class="ja">聞き取れなければ下の「文字」</span>'
+          : `<span class="en">${esc(e.text)}</span>${!e.cur && e.ja ? `<span class="ja">${esc(e.ja)}</span>` : ''}`}</div></div>`;
+    }
+    if (e.who === 'me') return `<div class="msg me"><div class="bub en">${esc(e.text)}</div></div>`;
+    return `<div class="msg sys"><div class="bub">${esc(e.text)}</div></div>`;
+  }).join('');
+  scrollChat(); refreshDock();
+}
+function refreshDock() {
+  if (screen === 'pron') { renderPronDock(); return; }
+  if (screen !== 'conv' || !C || !C.turn) return;
+  const dock = $('#dock'); if (!dock) return;
+  if (C.ended) { dock.innerHTML = C.result ? `<button class="btn big" data-act="toReview">📋 振り返りへ</button>` : `<div class="live">🎉 会話クリア！</div>`; return; }
+  const n = curNode(); const t = C.turn; const mode = inputMode();
+  let h = `<div class="tools">
+    <button data-act="replay">🔊 もう一度</button><button data-act="replaySlow">🐢 ゆっくり</button>
+    <button data-act="reveal" ${t.revealed ? 'disabled' : ''}>📝 文字</button>
+    <button data-act="hint" ${t.hint >= 3 ? 'disabled' : ''}>💡 ヒント${t.hint ? '(' + t.hint + ')' : ''}</button></div>`;
+  if (t.hint > 0) {
+    h += `<div class="hintbox">① 意味：「${esc(n.ja)}」→ <b>${esc(n.hint.ja)}</b>`;
+    if (t.hint > 1) h += `<br>② 最初の単語：<b class="en">${esc(n.hint.first)} …</b>`;
+    if (t.hint > 2) h += `<br>③ お手本：<b class="en">${esc(n.hint.model)}</b> <button class="chip" data-act="sayText" data-arg="${esc(n.hint.model)}">🔊</button>`;
+    h += `</div>`;
+  }
+  if (mode === 'offline') {
+    // オフライン：答えを選ぶ（正しい答え2つ＋ほかの場面の答え1つ）
+    const opts = offlineOptions(n);
+    h += `<div class="muted small">📴 オフラインなので、答えを選んでください（声に出して言ってから選ぶと効果的）</div>
+      <div class="choices ans">${opts.map(o => `<button class="en" data-act="choose" data-arg="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+  } else {
+    const showChoices = C.diff === 0 || t.misses >= 2;
+    if (showChoices) h += `<div class="muted small">言える答えの例（タップでお手本）</div><div class="choices">${n.choices.map(c => `<button class="en" data-act="sayText" data-arg="${esc(c)}">${esc(c)}</button>`).join('')}</div>`;
+    if (mode === 'mic') {
+      h += `<div class="micwrap"><button class="mic ${listening ? 'on' : ''}" data-act="mic" aria-label="話す">🎤</button><div class="live" id="live">${listening ? '聞いています…' : '押して英語で答える'}</div></div>`;
+    } else {
+      h += `<form class="kbd" data-form="answer"><input type="text" id="ans" class="en" lang="en" autocomplete="off" autocorrect="on" autocapitalize="sentences" spellcheck="false" placeholder="英語で答える（🎤で音声入力）"><button type="submit">送る</button></form>
+        <div class="muted small" style="margin-top:4px">⌨️ キーボードの🌐で「英語」にして、🎤で話すと音声入力できます</div>`;
+    }
+  }
+  dock.innerHTML = h;
+}
+function offlineOptions(n) {
+  const others = Object.values(C.sc.nodes).filter(x => x !== n).flatMap(x => x.choices);
+  const wrong = others.filter(o => !n.choices.includes(o));
+  const w = wrong[Math.floor(Math.random() * wrong.length)];
+  if (!C.turn.opts) C.turn.opts = [...n.choices.slice(0, 2), w].sort(() => Math.random() - 0.5);
+  return C.turn.opts;
+}
+// 答えを判定：①その場面の答え ②聞き返し ③自由回答 の順
+function matchNode(n, alts) {
+  for (const alt of alts) {
+    const w = normalize(alt); if (!w.length) continue;
+    for (const it of n.intents || []) {
+      if (it.any) continue;
+      if (it.slot === 'duration') { const d = extractDuration(w); if (d) return { type: 'intent', intent: it, slot: d, said: alt }; continue; }
+      if (it.match.some(p => matchPattern(p, w))) return { type: 'intent', intent: it, said: alt };
+    }
+  }
+  for (const alt of alts) {
+    const w = normalize(alt); if (!w.length || w.length > 9) continue;
+    for (const g of GLOBAL_INTENTS) if (g.match.some(p => matchPattern(p, w))) return { type: 'global', kind: g.kind, said: alt };
+  }
+  for (const alt of alts) {
+    const w = normalize(alt); const it = (n.intents || []).find(i => i.any);
+    if (it && w.length >= (it.min || 1)) return { type: 'intent', intent: it, said: alt };
+  }
+  return { type: 'miss', said: alts[0] };
+}
+async function handleAnswer(alts) {
+  if (!C || C.ended || !alts || !alts.length) return;
+  // NPCが話し終わるのを少し待つ（話している最中に答えても取りこぼさない）
+  for (let i = 0; C.busy && i < 30; i++) await sleep(100);
+  if (C.busy || C.ended) return;
+  C.busy = true;
+  try {
+    const n = curNode(); const m = matchNode(n, alts); const said = m.said || alts[0];
+    C.log.push({ who: 'me', text: said }); C.turn.tries.push(said);
+    diag('answer: ' + JSON.stringify(alts) + ' → ' + m.type + (m.intent ? ':' + m.intent.id : m.kind ? ':' + m.kind : ''));
+    if (m.type === 'global') {
+      C.turn.asks++; C.asks++; C.askKinds.add(m.kind === 'slow' ? 'p_slowly' : /again|repeat|pardon/.test(normalize(said).join(' ')) ? 'p_again' : 'p_sorry');
+      let text, rate;
+      if (m.kind === 'slow') { text = 'Sure. ' + n.say; rate = 0.7; }
+      else if (m.kind === 'dont') { text = 'OK. ' + (n.easy || n.say); rate = 0.7; }
+      else { text = n.say; rate = Math.min(C.rate, 0.85); }
+      C.log.push({ who: 'sys', text: '👍 聞き返しました（減点なし）' });
+      C.log.forEach(e => e.cur = false); C.log.push({ who: 'npc', text, ja: m.kind === 'dont' ? '（やさしい言い方）' + n.ja : n.ja, cur: true });
+      renderConvBody(); await npcSay(text, rate);
+    } else if (m.type === 'intent') {
+      const it = m.intent; let reply = it.reply || '', next = it.next;
+      if (it.slot === 'duration' && n.reactions) {
+        const r = n.reactions.find(x => m.slot.days <= x.max) || n.reactions[n.reactions.length - 1];
+        reply = r.say.replace('{dur}', durText(m.slot)); if (r.next) next = r.next;
+      }
+      Object.assign(C.turn, { said, ok: true, intent: it.id, phrase: it.phrase || n.phrase });
+      C.turns.push(C.turn);
+      if (next) await gotoNode(next, reply);
+      else {
+        C.log.forEach(e => e.cur = false); C.log.push({ who: 'npc', text: reply, cur: false });
+        C.ended = true; renderConvBody(); await npcSay(reply, C.rate); finishConv();
+      }
+    } else {
+      C.turn.misses++;
+      const text = (C.turn.misses === 1 ? "Sorry, I didn't catch that. " : 'Sorry? ') + n.say;
+      C.log.forEach(e => e.cur = false); C.log.push({ who: 'npc', text, ja: n.ja, cur: true });
+      if (C.turn.misses === 2) C.log.push({ who: 'sys', text: '💡 答えの例を出しました' });
+      renderConvBody(); await npcSay(text, Math.min(C.rate, 0.85));
+    }
+  } finally { C.busy = false; }
+}
+function finishConv() {
+  studyStop();
+  const hints = C.turns.reduce((a, t) => a + t.hint, 0), reveals = C.turns.filter(t => t.revealed).length;
+  const stamp = hints === 0 && reveals === 0 ? 'gold' : hints <= 1 ? 'silver' : 'bronze';
+  let xp = 0; C.turns.forEach(t => { t.xp = Math.max(5, 20 - [0, 5, 10, 15][t.hint]); xp += t.xp; });
+  const cp = S.cp[C.sc.cp] || (S.cp[C.sc.cp] = { plays: 0, best: '', noHintClears: 0 });
+  const rank = { '': 0, bronze: 1, silver: 2, gold: 3 }; const improved = rank[stamp] > rank[cp.best || ''];
+  const clearBonus = improved ? (C.sc.boss === 'final' ? 150 : C.sc.boss === 'mid' ? 100 : 50) : 20;
+  const askBonus = C.sc.boss ? Math.min(3, C.asks) * 5 : 0;
+  xp += clearBonus + askBonus; addXP(xp);
+  cp.plays = (cp.plays || 0) + 1; if (improved) cp.best = stamp; if (hints === 0) cp.noHintClears = (cp.noHintClears || 0) + 1;
+  cp.last = today(); if (!cp.cleared) cp.cleared = today();
+  const d = day(); d.turns += C.turns.length; d.hintFreeTurns += C.turns.filter(t => t.hint === 0).length; d.convs = (d.convs || 0) + 1;
+  // 復習（SRS）に入れる：ヒントや言い直しが必要だった文は早めに出る
+  C.turns.forEach(t => { if (!t.phrase) return; srsGrade(t.phrase, t.hint >= 2 ? 1 : (t.hint > 0 || t.misses > 0) ? 3 : 4); });
+  C.askKinds.forEach(p => srsGrade(p, 4));
+  save();
+  C.result = { stamp, xp, clearBonus, askBonus, hints, reveals, improved, sec: Math.round((Date.now() - C.t0) / 1000) };
+  refreshDock();
+}
+function vReview() {
+  const r = C.result; const sname = { gold: '金', silver: '銀', bronze: '銅' }[r.stamp];
+  const free = C.turns.filter(t => t.hint === 0).length;
+  let h = `<div class="screen" style="height:auto;min-height:100dvh"><div class="shead"><button class="x" data-act="tab" data-arg="home" aria-label="閉じる">✕</button><div class="ttl">振り返り</div></div>
+  <div style="padding:12px 16px calc(24px + env(safe-area-inset-bottom))">
+  <div class="card" style="text-align:center">
+    <div class="stamp ${r.stamp}"><b>${stampEmoji(r.stamp)}</b>${sname}スタンプ</div>
+    <h2 style="margin-top:10px">${findCp(C.sc.cp).icon} ${esc(C.sc.title)} クリア！</h2>
+    ${r.improved ? '<div class="ok" style="font-weight:700">スタンプ更新！</div>' : ''}
+    <div class="stat" style="margin-top:10px">
+      <div><b>+${r.xp}</b><span>XP</span></div>
+      <div><b>${free}/${C.turns.length}</b><span>ヒントなし</span></div>
+      <div><b>${C.asks}</b><span>聞き返し</span></div>
+    </div>
+    <div class="muted small" style="margin-top:8px">会話 ${r.xp - r.clearBonus - r.askBonus} ＋ クリア ${r.clearBonus}${r.askBonus ? ' ＋ 聞き返し ' + r.askBonus : ''} XP　・　${Math.floor(r.sec / 60)}分${r.sec % 60}秒</div>
+    ${C.asks ? '<div class="small" style="margin-top:8px">👍 聞き返しは、実際の旅でいちばん役に立つ技術です。</div>' : ''}
+  </div>
+  <div class="card"><h2>やり取りの振り返り</h2>`;
+  C.turns.forEach(t => {
+    const n = C.sc.nodes[t.nodeId]; const good = t.hint === 0 && t.misses === 0;
+    h += `<div class="turn"><div class="muted small">相手</div><div class="en" style="font-weight:700">${esc(n.say)}</div><div class="muted small">${esc(n.ja)}</div>
+      <div style="margin-top:6px">${good ? '✅ うまく言えました' : `⚠️ ${t.hint ? 'ヒント' + t.hint + '回' : ''}${t.hint && t.misses ? '・' : ''}${t.misses ? '言い直し' + t.misses + '回' : ''}`}</div>
+      <div class="small">あなた：<span class="en">${esc(t.said)}</span></div>
+      <div class="muted small" style="margin-top:6px">自然な言い方の例</div>
+      ${n.examples.map(x => `<div class="ex"><button data-act="sayText" data-arg="${esc(x)}" aria-label="お手本">🔊</button><span class="en">${esc(x)}</span></div>`).join('')}</div>`;
+  });
+  h += `</div>
+  <button class="btn big" data-act="startConv" data-arg="${C.scId}">🔁 もう一度会話する</button>
+  <button class="btn sub" data-act="startPron" data-arg="${C.sc.cp}">📢 発音チェックで練習</button>
+  <button class="btn sub" data-act="tab" data-arg="home">🏠 ホームへ</button>
+  </div></div>`;
+  return h;
+}
+
+/* ---------- 発音チェック ---------- */
+let P = null;
+function startPron(cpId) {
+  const cp = findCp(cpId); if (!cp || !cp.phrases) return;
+  P = { cpId, list: cp.phrases, idx: 0, stage: 'listen', result: null };
+  studyStart(); go('pron'); setTimeout(() => playPron(0.85), 300);
+}
+const curPhrase = () => CONTENT.phrases[P.list[P.idx]];
+function playPron(rate) { return speak(curPhrase().en, { who: 'narrator', rate }); }
+function vPron() {
+  const p = curPhrase(); const r = P.result;
+  let body = '';
+  if (P.stage === 'listen') {
+    body = `<div class="muted">🎧 まず音だけ聞いてみましょう</div><div class="pen hidden-line">・・・・・</div>
+      <button class="btn sub" data-act="pronStage" data-arg="shown">📝 文字と意味を見る</button>`;
+  } else {
+    body = `<div class="pen en">${esc(p.en)}</div><div>${esc(p.ja)}</div>
+      ${p.frame ? `<div class="muted small" style="margin-top:6px">型：<span class="en">${esc(p.frame)}</span></div>` : ''}
+      ${p.hear ? `<div class="muted small">言われる言葉：<span class="en">${esc(p.hear[0].en)}</span>（${esc(p.hear[0].ja)}）</div>` : ''}`;
+  }
+  if (r) {
+    body += `<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px;text-align:center">
+      <div class="score ${r.pass ? 'ok' : 'ng'}">${r.self ? '✔' : r.score}</div><div style="font-weight:700">${r.self ? '言えました（自己採点）' : r.pass ? '合格！' + (r.xp ? ' +' + r.xp + 'XP' : '') : 'もう少し！赤い単語を意識してもう一度'}</div>
+      ${r.self ? '' : `<div style="margin-top:8px">${tokHtml(r.E, r.okE)}</div>
+      <div class="muted small" style="margin-top:8px">機械に聞こえた英語</div><div>${tokHtml(r.G, r.okG)}</div>`}</div>`;
+  }
+  return `<div class="screen">
+    <div class="shead"><button class="x" data-act="quitPron" aria-label="やめる">✕</button><div class="ttl">📢 発音チェック</div><span class="chip">${P.idx + 1} / ${P.list.length}</span></div>
+    <div class="chat"><div class="card pcard">${body}</div>
+      <div class="row"><button class="btn sub" data-act="pronPrev" ${P.idx === 0 ? 'disabled' : ''}>← 前へ</button><button class="btn sub" data-act="pronNext">${P.idx === P.list.length - 1 ? '終わる' : '次へ →'}</button></div></div>
+    <div class="dock" id="dock"></div></div>`;
+}
+function renderPronDock() {
+  const dock = $('#dock'); if (!dock || !P) return; const mode = inputMode();
+  let h = `<div class="tools"><button data-act="pronPlay">🔊 お手本</button><button data-act="pronSlow">🐢 ゆっくり</button></div>`;
+  if (mode === 'mic') h += `<div class="micwrap"><button class="mic ${listening ? 'on' : ''}" data-act="pronMic" aria-label="話す">🎤</button><div class="live" id="live">${listening ? '聞いています…' : 'お手本のすぐ後に、真似して言う'}</div></div>`;
+  else if (mode === 'keyboard') h += `<form class="kbd" data-form="pron"><input type="text" id="pans" class="en" lang="en" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="🎤で音声入力して送る"><button type="submit">判定</button></form>
+      <div class="muted small" style="margin-top:4px">⌨️ キーボードの🌐で「英語」にして、🎤で話してください</div>`;
+  else h += `<div class="muted small">📴 オフラインなので発音の判定はできません。お手本の後に声に出して言ってみましょう。</div><button class="btn" style="margin-top:6px" data-act="pronSelf">🙆 声に出して言えた</button>`;
+  dock.innerHTML = h;
+}
+function judgePron(alts) {
+  const p = curPhrase();
+  const r = scorePron(p.en, alts); const d = day(); d.pron.push(r.score);
+  r.xp = 0;
+  if (r.pass && !d.pronPassed.includes(P.list[P.idx])) { d.pronPassed.push(P.list[P.idx]); r.xp = 10; addXP(10); srsGrade(P.list[P.idx], 4); }
+  save(); P.result = r; P.stage = 'shown'; render();
+  diag('pron: ' + JSON.stringify(alts) + ' → ' + r.score + (r.pass ? ' pass' : ''));
+}
+
+/* ---------- 設定 ---------- */
+function voiceOptions(sel, withAuto) {
+  return (withAuto ? `<option value="">おまかせ（自動で選ぶ）</option>` : '') +
+    voices.filter(v => voiceScore(v) > -500).map(v => `<option value="${esc(vKey(v))}" ${vKey(v) === sel ? 'selected' : ''}>${esc(vLabel(v))}</option>`).join('');
+}
+function vSettings() {
+  const s = S.settings; const nar = narratorVoice(); const off = voiceFor('officer');
+  const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-act="set" data-arg="${key}:${v}" class="${String(s[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  return header() + `
+  <div class="card"><h2>🔊 読み上げ</h2>
+    <label class="f">話す速さ</label>
+    ${seg('rate', [['auto', '自動'], ['0.7', '0.7'], ['0.85', '0.85'], ['1', '1.0']])}
+    <div class="muted small" style="margin-top:4px">自動：1回目はゆっくり、慣れると普通の速さになります</div>
+    <label class="f">お手本の声</label>
+    <select data-set="voice">${voiceOptions(s.voice, true)}</select>
+    <div class="muted small" style="margin-top:4px">いま使っている声：${nar ? esc(vLabel(nar)) : '（英語の声が見つかりません）'}</div>
+    <button class="btn sub" style="margin-top:8px" data-act="testVoice" data-arg="narrator">▶ 試しに聞く</button>
+    <label class="f">👮 入国審査官の声</label>
+    <select data-set="cv:officer">${voiceOptions(s.charVoices.officer || '', true)}</select>
+    <div class="muted small" style="margin-top:4px">いま使っている声：${off.v ? esc(vLabel(off.v)) : '—'}（高さ ${off.pitch.toFixed(2)}）</div>
+    <button class="btn sub" style="margin-top:8px" data-act="testVoice" data-arg="officer">▶ 試しに聞く</button>
+    <details style="margin-top:6px"><summary class="small">もっと自然な声にするには</summary>
+      <div class="small" style="margin-top:6px">iPhoneの「設定」→「アクセシビリティ」→「読み上げコンテンツ」→「声」→「英語」で、名前に「拡張」「プレミアム」とある声（例：Ava、Evan、Samantha）をダウンロードしてください。アプリを開き直すと自動で使います。日本語の読み上げ設定は変わりません。</div></details>
+  </div>
+  <div class="card"><h2>🎤 答え方</h2>
+    ${seg('inputMode', [['auto', '自動'], ['mic', 'マイク'], ['keyboard', 'キーボード']])}
+    <div class="muted small" style="margin-top:6px">いまの答え方：<b>${MODE_LABEL[inputMode()]}</b>${!SR ? '（このブラウザには音声認識の機能がありません）' : ''}${(S.sys.micBroken[ctxKey()] || 0) >= 2 ? '（マイクが使えなかったため自動で切り替え中）' : ''}</div>
+    ${(S.sys.micBroken[ctxKey()] || 0) ? `<button class="btn sub" style="margin-top:8px" data-act="retryMic">🎤 マイク方式を試し直す</button>` : ''}
+    <div class="small" style="margin-top:8px">キーボード方式のときは、iPhoneの「設定」→「一般」→「キーボード」→「キーボード」で「英語（米国）」を追加しておくと、🌐で切り替えて英語で音声入力できます。</div>
+    <button class="btn sub" style="margin-top:10px" data-act="tab" data-arg="diag">🩺 音声の診断</button>
+  </div>
+  <div class="card"><h2>💾 バックアップ</h2>
+    <div class="muted small">記録はこのiPhoneの中だけにあります。ときどき書き出して「ファイル」アプリなどに保存しておくと安心です。</div>
+    <div class="muted small">前回の書き出し：${S.sys.lastBackup || 'まだありません'}</div>
+    <button class="btn" style="margin-top:8px" data-act="exportData">⬆️ 書き出す（JSON）</button>
+    <button class="btn sub" data-act="importData">⬇️ 読み込む</button>
+  </div>
+  <div class="card"><h2>そのほか</h2>
+    <button class="btn warn" data-act="resetAll">記録をすべて消す</button>
+    <div class="muted small" style="text-align:center">アプリの版：${APP_VERSION}</div>
+  </div>`;
+}
+
+/* ---------- 音声の診断 ---------- */
+let micTest = '';
+function vDiag() {
+  const ua = navigator.userAgent; const ios = (ua.match(/OS (\d+)_(\d+)/) || [])[0];
+  const nar = narratorVoice(); const off = voiceFor('officer');
+  return header() + `
+  <div class="card"><h2>🩺 音声の診断</h2>
+    <table class="kv">
+      <tr><td>開き方</td><td>${isStandalone() ? '📱 ホーム画面アプリ' : '🧭 ブラウザ（Safariなど）'}</td></tr>
+      <tr><td>ネット</td><td>${navigator.onLine ? '✅ つながっている' : '❌ オフライン'}</td></tr>
+      <tr><td>音声認識の機能</td><td>${SR ? '✅ あり' : '❌ なし'}</td></tr>
+      <tr><td>読み上げの機能</td><td>${hasTTS ? '✅ あり' : '❌ なし'}</td></tr>
+      <tr><td>いまの答え方</td><td>${MODE_LABEL[inputMode()]}</td></tr>
+      <tr><td>マイク失敗の回数</td><td>ブラウザ ${S.sys.micBroken.browser || 0}回／ホーム画面 ${S.sys.micBroken.standalone || 0}回</td></tr>
+      <tr><td>端末</td><td>${ios ? 'iPhone/iPad ' + esc(ios.replace('OS ', 'iOS ').replace('_', '.')) : esc(ua.slice(0, 60))}</td></tr>
+      <tr><td>英語の声</td><td>${voices.length}個（良い声 ${goodVoices().length}個）</td></tr>
+      <tr><td>お手本の声</td><td>${nar ? esc(vLabel(nar)) : '—'}</td></tr>
+      <tr><td>審査官の声</td><td>${off.v ? esc(vLabel(off.v)) : '—'}</td></tr>
+    </table>
+  </div>
+  <div class="card"><h2>① マイクのテスト</h2>
+    <div class="small">ボタンを押して <b class="en">"Good morning."</b> と言ってください。</div>
+    <button class="btn" style="margin-top:8px" data-act="micTest" ${SR ? '' : 'disabled'}>🎤 マイクをテストする</button>
+    <div id="mictest" class="small">${micTest}</div>
+  </div>
+  <div class="card"><h2>② 読み上げ → マイク → 読み上げ</h2>
+    <div class="small">マイクを使った後に読み上げの音が小さくならないか確かめます。1回目と3回目の音の大きさを比べてください。</div>
+    <button class="btn sub" style="margin-top:8px" data-act="volTest" ${SR ? '' : 'disabled'}>▶ 試す</button>
+  </div>
+  <div class="card"><h2>③ 英語の声の一覧</h2>
+    <div class="muted small">上ほど品質が良い（★＝いま自動で選ばれている声）</div>
+    <div class="vlist">${voices.map(v => `<div class="vrow"><span>${vKey(v) === vKey(nar) ? '★ ' : ''}${esc(vLabel(v))}<br><span class="muted">${voiceScore(v)}点</span></span><button data-act="tryVoice" data-arg="${esc(vKey(v))}">▶</button></div>`).join('') || '<div class="muted">見つかりません</div>'}</div>
+  </div>
+  <div class="card"><h2>④ 動きの記録</h2>
+    <textarea class="log" id="diaglog" readonly></textarea>
+    <button class="btn sub" style="margin-top:8px" data-act="copyDiag">📋 診断結果をコピー</button>
+    <div class="muted small">うまく動かないときは、コピーした内容をジュピに貼ってください。</div>
+  </div>`;
+}
+function diagReport() {
+  const nar = narratorVoice();
+  return ['【エイゴログ 診断】版 ' + APP_VERSION, '日時 ' + new Date().toLocaleString('ja-JP'), '開き方 ' + (isStandalone() ? 'ホーム画面アプリ' : 'ブラウザ'),
+    'ネット ' + navigator.onLine, '音声認識 ' + !!SR, '答え方 ' + inputMode(), 'マイク失敗 ' + JSON.stringify(S.sys.micBroken), 'UA ' + navigator.userAgent,
+    '声 ' + voices.length + '個 / お手本 ' + (nar ? vLabel(nar) : '-'), '声の一覧: ' + voices.slice(0, 15).map(v => v.name + '[' + (v.voiceURI || '') + ']').join(', '),
+    'マイクテスト ' + micTest.replace(/<[^>]+>/g, ''), '--- 記録 ---', ...DIAG].join('\n');
+}
+
+/* =====================================================================
+   ボタンの動き
+   ===================================================================== */
+const ACT = {
+  tab: a => { if (screen === 'conv' || screen === 'pron') { stopSpeaking(); stopListening(); studyStop(); } go(a); },
+  startConv: a => startConv(a),
+  quitConv: () => { if (!confirm('会話をやめますか？（この会話の結果は残りません）')) return; stopSpeaking(); stopListening(); studyStop(); C.ended = true; go('home'); },
+  toReview: () => { if (C && C.result) go('review'); },
+  replay: () => { if (!C) return; const last = [...C.log].reverse().find(e => e.who === 'npc'); speak(last ? last.text : curNode().say, { who: C.sc.npc, rate: C.rate }); },
+  replaySlow: () => { if (!C) return; const last = [...C.log].reverse().find(e => e.who === 'npc'); speak(last ? last.text : curNode().say, { who: C.sc.npc, rate: 0.7 }); },
+  reveal: () => { C.turn.revealed = true; renderConvBody(); },
+  hint: () => { if (C.turn.hint >= 3) return; C.turn.hint++; refreshDock(); if (C.turn.hint === 3) speak(curNode().hint.model, { rate: 0.8 }); },
+  sayText: a => speak(a, { rate: 0.8 }),
+  choose: a => handleAnswer([a]),
+  mic: async () => {
+    if (listening) { stopListening(); return; }
+    if (C.busy) { stopSpeaking(); }
+    refreshDockListening(true);
+    const alts = await micListen(t => { const l = $('#live'); if (l) l.textContent = t || '聞いています…'; });
+    refreshDock();
+    if (alts) handleAnswer(alts);
+  },
+  pronStage: a => { P.stage = a; render(); },
+  pronPlay: () => playPron(0.85),
+  pronSlow: () => playPron(0.7),
+  pronPrev: () => { if (P.idx > 0) { P.idx--; P.stage = 'listen'; P.result = null; render(); setTimeout(() => playPron(0.85), 200); } },
+  pronNext: () => { if (P.idx < P.list.length - 1) { P.idx++; P.stage = 'listen'; P.result = null; render(); setTimeout(() => playPron(0.85), 200); } else { studyStop(); stopSpeaking(); go('home'); toast('おつかれさまでした！'); } },
+  pronMic: async () => {
+    if (listening) { stopListening(); return; }
+    refreshDockListening(true);
+    const alts = await micListen(t => { const l = $('#live'); if (l) l.textContent = t || '聞いています…'; });
+    renderPronDock();
+    if (alts) judgePron(alts);
+  },
+  pronSelf: () => { const d = day(); if (!d.pronPassed.includes(P.list[P.idx])) { d.pronPassed.push(P.list[P.idx]); addXP(5); } save(); P.result = { self: true, pass: true }; P.stage = 'shown'; render(); },
+  quitPron: () => { stopSpeaking(); stopListening(); studyStop(); go('home'); },
+  set: a => { const [k, v] = a.split(':'); S.settings[k] = v; save(); render(); },
+  retryMic: () => { S.sys.micBroken[ctxKey()] = 0; save(); render(); toast('マイク方式に戻しました'); },
+  testVoice: a => speak(a === 'officer' ? 'Hello. May I see your passport, please?' : "I'm here for sightseeing.", { who: a, rate: 0.85 }),
+  tryVoice: a => { const v = byURI(a); if (!v || !hasTTS) return; stopSpeaking(); const u = new SpeechSynthesisUtterance('Hello. How long will you stay?'); u.voice = v; u.lang = v.lang; u.rate = 0.85; speechSynthesis.speak(u); },
+  micTest: async () => {
+    micTest = '聞いています…「Good morning.」と言ってください'; const el = $('#mictest'); if (el) el.textContent = micTest;
+    const r = await listen({ onInterim: t => { const e = $('#mictest'); if (e) e.textContent = '聞こえた：' + t; } });
+    micTest = r.alts.length ? `✅ 聞き取れました：<b class="en">${esc(r.alts.join(' / '))}</b>` : `❌ 聞き取れませんでした（${esc(r.err || '音が届かない')}${r.started ? '' : '・マイクが始まらない'}）`;
+    render();
+  },
+  volTest: async () => {
+    await speak('This is the first test.', { rate: 0.85 });
+    toast('いま何か英語で話してください', 2500);
+    await listen({ timeout: 5000 }); await sleep(300);
+    await speak('This is the third test. Is the sound the same?', { rate: 0.85 });
+  },
+  copyDiag: async () => {
+    const t = diagReport();
+    try { await navigator.clipboard.writeText(t); toast('コピーしました'); }
+    catch (e) { const l = $('#diaglog'); l.value = t; l.removeAttribute('readonly'); l.select(); toast('全部選んだ状態にしました。長押しでコピーしてください', 4000); }
+  },
+  exportData: () => exportData(),
+  importData: () => $('#importFile').click(),
+  resetAll: () => {
+    const li = levelInfo(S.player.xp);
+    if (!confirm(`いまの記録（Lv.${li.L}・${S.player.xp}XP・学習日数${Object.keys(S.days).length}日）をすべて消します。元に戻せません。よろしいですか？`)) return;
+    if (!confirm('本当に消しますか？（先にバックアップの書き出しをおすすめします）')) return;
+    const keepSettings = S.settings; S = DEFAULT(); S.settings = keepSettings; save(); go('home'); toast('記録を消しました（設定は残しています）');
+  }
+};
+function refreshDockListening(on) { listening = on; refreshDock(); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const f = ACT[b.dataset.act]; if (f) { e.preventDefault(); f(b.dataset.arg, b, e); }
+});
+document.addEventListener('change', e => {
+  const k = e.target.dataset && e.target.dataset.set; if (!k) return;
+  if (k.startsWith('cv:')) S.settings.charVoices[k.slice(3)] = e.target.value; else S.settings[k] = e.target.value;
+  save(); render();
+});
+document.addEventListener('submit', e => {
+  const f = e.target.dataset.form; if (!f) return; e.preventDefault();
+  if (f === 'answer') { const i = $('#ans'); const v = i.value.trim(); if (!v) return; i.value = ''; i.blur(); handleAnswer([v]); }
+  if (f === 'pron') { const i = $('#pans'); const v = i.value.trim(); if (!v) return; i.value = ''; i.blur(); judgePron([v]); }
+});
+
+/* ---------- バックアップ ---------- */
+async function exportData() {
+  const json = JSON.stringify({ app: 'eigolog', version: APP_VERSION, exportedAt: new Date().toISOString(), data: S }, null, 1);
+  const name = `eigolog_${today()}.json`;
+  try {
+    const file = new File([json], name, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      S.sys.lastBackup = today(); save(); render(); return;
+    }
+  } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  S.sys.lastBackup = today(); save(); render();
+}
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text()); const d = j.data || j;
+    if (!d || !d.ver || !d.player) throw new Error('形式が違います');
+    const a = levelInfo(S.player.xp), b = levelInfo(d.player.xp || 0);
+    const msg = `次の内容で、いまの記録を置き換えます。\n\nいま：Lv.${a.L}・${S.player.xp}XP・学習日数${Object.keys(S.days).length}日\n読み込む：Lv.${b.L}・${d.player.xp || 0}XP・学習日数${Object.keys(d.days || {}).length}日（${j.exportedAt ? j.exportedAt.slice(0, 10) + ' に書き出し' : '日付不明'}）\n\nよろしいですか？`;
+    if (!confirm(msg)) return;
+    S = merge(DEFAULT(), d); save(); go('home'); toast('読み込みました');
+  } catch (err) { alert('読み込めませんでした：' + err.message); }
+});
+
+/* =====================================================================
+   起動
+   ===================================================================== */
+if (hasTTS) {
+  refreshVoices();
+  speechSynthesis.onvoiceschanged = () => { refreshVoices(); diag('voices: ' + voices.length); if (['settings', 'diag'].includes(screen)) render(); };
+  // iPhoneは声の一覧が遅れて届くことがあるので、何回か取り直す
+  let tries = 0; const iv = setInterval(() => { const n = voices.length; refreshVoices(); if (voices.length !== n && ['settings', 'diag'].includes(screen)) render(); if (++tries > 12 || voices.length) clearInterval(iv); }, 300);
+}
+diag('起動 版' + APP_VERSION + ' / ' + (isStandalone() ? 'ホーム画面' : 'ブラウザ') + ' / 音声認識' + (SR ? 'あり' : 'なし') + ' / ' + (navigator.onLine ? 'オンライン' : 'オフライン') + ' / 答え方 ' + inputMode());
+window.addEventListener('pagehide', () => { studyStop(); save(); });
+// 電波がない所でも開けるようにする（ゴルフスコア表と同じ仕組み）
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded && screen !== 'conv' && screen !== 'pron') { reloaded = true; location.reload(); } });
+}
+render();
+</script>
+</body>
+</html>
