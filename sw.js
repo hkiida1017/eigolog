@@ -1,7 +1,7 @@
 /* 電波がなくても開けるように、アプリ本体をiPhoneの中に取っておく仕組み。
    電波があるときは毎回いちばん新しい版を取りに行き（3秒で返事がなければ取っておいた版）、
    電波がないときは取っておいた版で開く。 */
-const CACHE = 'eigolog-v3';
+const CACHE = 'eigolog-v5';
 const FILES = ['./index.html', './apple-touch-icon.png', './icon-512.png', './manifest.json'];
 
 self.addEventListener('install', e => {

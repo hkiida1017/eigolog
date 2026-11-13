@@ -175,7 +175,7 @@ textarea.log{min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size
 
 <script>
 'use strict';
-const APP_VERSION = '2026.11.13-1';
+const APP_VERSION = '2026.11.13-3';
 
 /* =====================================================================
    教材データ（あとから足しやすいように、ここにまとめて書く）
@@ -249,14 +249,14 @@ const CONTENT = {
         n1: { say: 'Hello. May I see your passport, please?', ja: 'こんにちは。パスポートを拝見できますか？', easy: 'Passport, please.',
               hint: { ja: '「はい、どうぞ」と渡す', first: 'Here', model: 'Here you are.' },
               choices: ['Here you are.', 'Here it is.'], examples: ['Here you are.', 'Here it is.', 'Sure. Here you are.'], phrase: 'p_here_you_are',
-              intents: [ { id: 'give', match: [['here'], ['sure'], ['ok|okay|yes|yeah']], reply: 'Thank you.', next: 'n2' } ] },
+              intents: [ { id: 'give', match: [['here'], ['sure'], ['ok|okay|yes|yeah']], reply: 'Thank you.', next: 'n2', ex: ['Here you are.', 'Here it is.', 'Sure.'] } ] },
         n2: { say: "What's the purpose of your visit?", ja: '訪問の目的は何ですか？', easy: 'Why are you here? Sightseeing? Business?',
               hint: { ja: '「観光です」と答える', first: 'Sightseeing', model: "I'm here for sightseeing." },
               choices: ['Sightseeing.', "I'm here for sightseeing.", 'Business.'], examples: ["I'm here for sightseeing.", 'Sightseeing.', 'For vacation.'],
               intents: [
-                { id: 'visit', match: [['visit|visiting|see|meet', 'family|friend|friends|sister|brother|son|daughter|mother|father|parents|wife|husband|cousin|aunt|uncle']], reply: 'Oh, nice.', next: 'n2c' },
-                { id: 'business', match: [['business|work|working|meeting|conference']], reply: 'Business. I see.', next: 'n2b' },
-                { id: 'sightseeing', match: [['sightseeing|sightsee|sight|travel|traveling|travelling|vacation|holiday|trip|tourism|tourist|tour|fun|visit|visiting']], reply: 'Sightseeing. Nice.', next: 'n3', phrase: 'p_sightseeing' }
+                { id: 'visit', match: [['visit|visiting|see|meet', 'family|friend|friends|sister|brother|son|daughter|mother|father|parents|wife|husband|cousin|aunt|uncle']], reply: 'Oh, nice.', next: 'n2c', ex: ["I'm visiting my friend.", "I'm visiting my family."] },
+                { id: 'business', match: [['business|work|working|meeting|conference']], reply: 'Business. I see.', next: 'n2b', ex: ['Business.', 'For business.', 'For work.', "I'm here for work.", "I'm here on business."] },
+                { id: 'sightseeing', match: [['sightseeing|sightsee|sight|travel|traveling|travelling|vacation|holiday|trip|tourism|tourist|tour|fun|visit|visiting']], reply: 'Sightseeing. Nice.', next: 'n3', phrase: 'p_sightseeing', ex: ["I'm here for sightseeing.", 'Sightseeing.', 'For vacation.'] }
               ] },
         n2b:{ say: 'What kind of business?', ja: 'どんなお仕事ですか？', easy: 'What do you do here?',
               hint: { ja: '「会議があります」と答える', first: 'I', model: 'I have a meeting.' },
@@ -275,28 +275,29 @@ const CONTENT = {
               hint: { ja: '「はい、あります」と答える', first: 'Yes', model: 'Yes, I have a return ticket.' },
               choices: ['Yes, I do.', 'Yes, I have a return ticket.'], examples: ['Yes, I do.', 'Yes, I have a return ticket.', 'Yes, here it is.'], phrase: 'p_return_ticket',
               intents: [
-                { id: 'no', match: [['no|not|nope']], reply: "Please get one before you leave. OK.", next: 'n4' },
-                { id: 'yes', match: [['yes|yeah|sure|do|have|here']], reply: 'Good.', next: 'n4' }
+                { id: 'no', match: [['no|not|nope']], reply: "Please get one before you leave. OK.", next: 'n4', ex: ["No, I don't."] },
+                { id: 'yes', match: [['yes|yeah|sure|do|have|here']], reply: 'Good.', next: 'n4', ex: ['Yes, I do.', 'Yes, I have a return ticket.', 'Yes, here it is.'] }
               ] },
         n4: { say: 'Where are you staying?', ja: 'どこに滞在しますか？', easy: 'A hotel? A friend\'s house?',
               hint: { ja: '「ホテルです」と答える', first: 'At', model: "I'm staying at a hotel." },
               choices: ['At a hotel.', "I'm staying at a hotel.", "At my friend's house."], examples: ['At a hotel.', "I'm staying at a hotel.", "At my friend's house."],
               intents: [
-                { id: 'hotel', match: [['hotel|inn|motel|hostel|airbnb|apartment|resort']], reply: 'A hotel. OK.', next: 'n5', phrase: 'p_stay_hotel' },
-                { id: 'friend', match: [['friend|friends|family|sister|brother|son|daughter|house|home|aunt|uncle|cousin']], reply: 'OK.', next: 'n5' },
+                { id: 'hotel', match: [['hotel|inn|motel|hostel|airbnb|apartment|resort']], reply: 'A hotel. OK.', next: 'n5', phrase: 'p_stay_hotel', ex: ['At a hotel.', "I'm staying at a hotel."] },
+                { id: 'friend', match: [['friend|friends|family|sister|brother|son|daughter|house|home|aunt|uncle|cousin']], reply: 'OK.', next: 'n5', ex: ["At my friend's house."] },
                 { id: 'any', any: true, min: 2, reply: 'OK.', next: 'n5' }
               ] },
         n5: { say: 'Is this your first time here?', ja: 'ここに来るのは初めてですか？', easy: 'Did you come here before?',
               hint: { ja: '「はい、初めてです」と答える', first: 'Yes', model: "Yes, it's my first time." },
               choices: ["Yes, it's my first time.", "No, it's my second time."], examples: ["Yes, it's my first time.", 'Yes, first time.', "No, it's my second time."], phrase: 'p_first_time',
               intents: [
-                { id: 'again', match: [['second|third|before|times|twice'], ['no|nope']], reply: 'Welcome back!', next: 'n6' },
-                { id: 'first', match: [['yes|first|yeah']], reply: 'Oh, great.', next: 'n6' }
+                { id: 'first', match: [['first']], reply: 'Oh, great.', next: 'n6', ex: ["Yes, it's my first time.", 'Yes, first time.'] },
+                { id: 'again', match: [['second|third|before|times|twice'], ['no|nope']], reply: 'Welcome back!', next: 'n6', ex: ["No, it's my second time.", 'No, I came here before.'] },
+                { id: 'yes', match: [['yes|yeah']], reply: 'Oh, great.', next: 'n6', ex: ["Yes, it's my first time.", 'Yes.'] }
               ] },
         n6: { say: "OK. Here's your passport. Enjoy your stay!", ja: 'はい、パスポートをお返しします。滞在を楽しんでください！', easy: 'Here is your passport. Have a good time!',
               hint: { ja: 'お礼を言う', first: 'Thank', model: 'Thank you.' },
               choices: ['Thank you.', 'Thank you very much.'], examples: ['Thank you.', 'Thank you very much.', 'Thanks!'], phrase: 'p_thank_you',
-              intents: [ { id: 'thanks', match: [['thank|thanks']], reply: "You're welcome." }, { id: 'any', any: true, min: 1, reply: 'Have a nice day.' } ] }
+              intents: [ { id: 'thanks', match: [['thank|thanks']], reply: "You're welcome.", ex: ['Thank you.', 'Thank you very much.', 'Thanks.'] }, { id: 'any', any: true, min: 1, reply: 'Have a nice day.' } ] }
       }
     }
   }
@@ -322,7 +323,7 @@ const T0 = Date.now();
 let toastTimer;
 function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 const DIAG = [];
-function diag(msg) { DIAG.push(((Date.now() - T0) / 1000).toFixed(2) + 's ' + msg); if (DIAG.length > 300) DIAG.shift(); if (screen === 'diag') { const l = $('#diaglog'); if (l) l.value = DIAG.join('\n'); } }
+function diag(msg) { DIAG.push(((Date.now() - T0) / 1000).toFixed(2) + 's ' + msg); if (DIAG.length > 300) DIAG.shift(); if (screen === 'diag') { const l = $('#diaglog'); if (l) l.value = diagReport(); } }
 const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
 const ctxKey = () => isStandalone() ? 'standalone' : 'browser';
 const findCp = id => { for (const s of CONTENT.stages) for (const c of s.checkpoints) if (c.id === id) return c; return null; };
@@ -336,9 +337,11 @@ const DEFAULT = () => ({
   player: { name: '', xp: 0, createdAt: today() },
   srs: {},       // 復習の予定（フレーズごと）
   cp: {},        // チェックポイントの成績
+  weak: {},      // 復習リスト（会話でうまく聞き取られなかった文）
   days: {},      // 1日ごとの記録
   settings: { rate: 'auto', voice: '', charVoices: {}, inputMode: 'auto' },
-  sys: { micBroken: { browser: 0, standalone: 0 }, lastBackup: '' }
+  session: null, // 途中の会話（つづきから用）
+  sys: { micBroken: { browser: 0, standalone: 0 }, lastBackup: '', backupSnooze: '' }
 });
 function merge(a, b) {
   for (const k in b) {
@@ -347,8 +350,44 @@ function merge(a, b) {
   }
   return a;
 }
-function load() { try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && j.ver) return merge(DEFAULT(), j); } catch (e) {} return DEFAULT(); }
+/* もしものときの控え（同じiPhoneの中に置く。外への書き出しの代わりにはならない）
+   undo  ：記録を置き換える直前（読み込み・控えに戻す・全部消す）の記録。1つだけ
+   daily ：その日はじめて開いたときの記録（＝前の日までの記録）
+   broken：読めなかった保存データ（そのままの文字） */
+const SLOT = { undo: KEY + '_undo', daily: KEY + '_daily', broken: KEY + '_broken' };
+const SLOT_LABEL = { undo: '置き換える直前の記録', daily: '今日はじめて開いたときの記録', broken: '読めなかった保存データ' };
+function putSlot(name, raw, why) { try { localStorage.setItem(SLOT[name], JSON.stringify({ at: new Date().toISOString(), day: today(), why: why || '', raw })); return true; } catch (e) { return false; } }
+function getSlot(name) { try { const j = JSON.parse(localStorage.getItem(SLOT[name])); return j && j.raw ? j : null; } catch (e) { return null; } }
+function slotSummary(raw) { try { const d = JSON.parse(raw); const li = levelInfo((d.player && d.player.xp) || 0); return `Lv.${li.L}・${(d.player && d.player.xp) || 0}XP・学習日数${Object.keys(d.days || {}).length}日`; } catch (e) { return '中身を読めません'; } }
+const fmtAt = iso => { const d = new Date(iso); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+let loadProblem = '';
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { loadProblem = 'storage'; return DEFAULT(); }
+  if (!raw) return DEFAULT();
+  try { const j = JSON.parse(raw); if (j && j.ver && j.player) return merge(DEFAULT(), j); } catch (e) {}
+  // 読めなかった：消さずに別の場所へ残してから、新しく始める（黙って上書きしない）
+  putSlot('broken', raw, '保存データが読めなかった'); loadProblem = 'broken';
+  return DEFAULT();
+}
 let S = load();
+// その日はじめて開いたとき、いまの記録の控えを1つ取っておく
+(function () { try { if (loadProblem) return; const raw = localStorage.getItem(KEY); if (!raw) return; const d = getSlot('daily'); if (!d || d.day !== today()) putSlot('daily', raw, '今日はじめて開いたとき'); } catch (e) {} })();
+function restoreSlot(name) {
+  const sl = getSlot(name); if (!sl) return; let d = null;
+  try { d = JSON.parse(sl.raw); } catch (e) {}
+  if (!d || !d.ver || !d.player) { alert('この控えは中身が読めないため、戻せません。「取り出す」でファイルにして、ジュピに見せてください。'); return; }
+  if (!confirm(`いまの記録を、控えの記録に置き換えます。\n\nいま：${slotSummary(JSON.stringify(S))}\n控え：${slotSummary(sl.raw)}（${fmtAt(sl.at)}・${sl.why}）\n\nいまの記録は「置き換える直前の記録」として1つだけ残るので、あとで戻せます。よろしいですか？`)) return;
+  putSlot('undo', JSON.stringify(S), '控えに戻す直前');
+  S = merge(DEFAULT(), d); loadProblem = ''; save(); go('home'); toast('控えの記録に戻しました');
+}
+function backupDue() {
+  const n = Object.keys(S.days).length; if (!n || S.sys.backupSnooze === today()) return '';
+  const last = S.sys.lastBackup;
+  if (!last) return n >= 3 ? 'まだ一度も書き出していません' : '';
+  const diff = Math.round((new Date(today() + 'T00:00:00') - new Date(last + 'T00:00:00')) / 86400000);
+  return diff >= 7 ? `前回の書き出しから ${diff}日 たちました` : '';
+}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('保存できませんでした（空き容量を確認してください）'); } }
 function day(d = today()) { return S.days[d] = Object.assign({ sec: 0, xp: 0, pron: [], pronPassed: [], listen: [0, 0], turns: 0, hintFreeTurns: 0, convs: 0, done: false }, S.days[d] || {}); }
 
@@ -497,7 +536,9 @@ function tokHtml(T, ok) {
    ===================================================================== */
 const hasTTS = 'speechSynthesis' in window;
 let voices = [];
-const NOVELTY = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|junior|ralph|kathy|fred)\b/i;
+const NOVELTY = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|pipe organ|superstar|princess|trinoids|whisper|wobble|zarvox|deranged|hysterical|junior|ralph|kathy|fred)\b/i;
+// おもしろ系の声は、iPhoneが日本語表示だと名前が「ベル」「道化」などになり名前では見分けられないので、声の番号（voiceURI）でも見分ける
+const isNovelty = v => NOVELTY.test(v.name || '') || (/speech\.synthesis\.voice\./i.test(v.voiceURI || '') && !/\.Alex$/i.test(v.voiceURI || ''));
 const LOWQ = /\b(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
 const FEMALE = /\b(samantha|ava|allison|susan|zoe|nicky|joelle|noelle|victoria|karen|moira|tessa|kathy|shelley|sandy|flo|grandma|aria|jenny|michelle|zira|female|emma|sara|libby|sonia|serena|kate|fiona|catherine|nora|ellie|ana|jane|nancy|amber|ashley|cora|elizabeth|monica)\b/i;
 const MALE = /\b(alex|tom|evan|nathan|aaron|fred|daniel|rishi|reed|rocko|eddy|grandpa|ralph|guy|christopher|eric|mark|david|male|james|oliver|arthur|gordon|lee|ryan|steffan|davis|tony|jason|roger|brian|andrew|brandon|jacob|thomas)\b/i;
@@ -507,12 +548,13 @@ function voiceScore(v) {
   const n = vText(v), lang = (v.lang || '').replace('_', '-');
   let s = 0;
   if (/^en-US/i.test(lang)) s += 100; else if (/^en/i.test(lang)) s += 40; else return -9999;
-  if (NOVELTY.test(v.name)) s -= 1000;
+  if (isNovelty(v)) s -= 1000;
   if (LOWQ.test(v.name) || /eloquence/i.test(n)) s -= 30;
   if (/premium/i.test(n)) s += 50;
   if (/enhanced|拡張/i.test(n)) s += 35;
   if (/natural|neural/i.test(n)) s += 40;
   if (/compact/i.test(n)) s -= 10;
+  if (/super-compact/i.test(n)) s -= 20;
   if (/google/i.test(n)) s += 20;
   if (/\b(samantha|ava|allison|evan|nathan|zoe|tom|alex|aaron|nicky|susan|joelle|noelle)\b/i.test(v.name)) s += 10;
   if (v.localService) s += 2;
@@ -535,17 +577,21 @@ const byURI = uri => uri ? voices.find(v => (v.voiceURI || v.name) === uri) : nu
 const vKey = v => v ? (v.voiceURI || v.name) : '';
 const goodVoices = () => voices.filter(v => voiceScore(v) > 0);
 function narratorVoice() { return byURI(S.settings.voice) || goodVoices()[0] || voices[0] || null; }
-// 登場人物の声：指定がなければ「性別が合って、お手本の声とは別の、いちばん良い声」。合う声がなければ高さを変えて別人らしくする
+// 登場人物の声：指定がなければ「アメリカ英語で、性別が合って、お手本の声とは別の、いちばん良い声」。合う声がなければ高さを変えて別人らしくする
 function voiceFor(who) {
   if (who === 'narrator') return { v: narratorVoice(), pitch: 1, rate: 1 };
   const ch = CONTENT.characters[who] || { gender: '', pitch: 1, rate: 1 };
   const set = byURI(S.settings.charVoices[who]);
   if (set) return { v: set, pitch: 1 + (ch.pitch - 1) * 0.4, rate: ch.rate };
-  const nar = narratorVoice(); const pool = goodVoices();
-  let v = pool.find(x => genderOf(x) === ch.gender && x !== nar);
+  // アメリカ英語の声の中から選ぶ（ほかの国の英語は、アメリカ英語の声が1つもないときだけ）
+  const nar = narratorVoice(); const us = goodVoices().filter(x => /^en-US/i.test((x.lang || '').replace('_', '-')));
+  const pool = us.length ? us : goodVoices();
+  const v = pool.find(x => genderOf(x) === ch.gender && x.name !== (nar && nar.name));
   if (v) return { v, pitch: 1 + (ch.pitch - 1) * 0.4, rate: ch.rate };
-  v = pool.find(x => x !== nar) || nar;
-  return { v, pitch: ch.pitch, rate: ch.rate };
+  // 性別の合う声がない：お手本とは別の声があればそれを、なければお手本と同じ声を、高さを大きめに変えて別人らしくする
+  const shift = ch.gender === 'm' ? -0.12 : ch.gender === 'f' ? 0.12 : 0;
+  const other = pool.find(x => x.name !== (nar && nar.name));
+  return { v: other || nar, pitch: Math.max(0.6, Math.min(1.5, ch.pitch + shift)), rate: ch.rate };
 }
 let speakSeq = 0, ttsActive = 0, lastTTSEnd = 0;
 function setSpeaking(on) { document.body.classList.toggle('speaking', on); }
@@ -620,7 +666,7 @@ function openSession() {
     if (!o.cb) o.dirty = true;   // だれも聞いていない間に入った音（相手の読み上げなど）は、答えにしない
     tell('interim');
   };
-  r.onerror = e => { o.err = e.error || 'error'; diag('mic error: ' + o.err); };
+  r.onerror = e => { o.err = e.error || 'error'; diag('mic error: ' + o.err + ' #' + o.id + (o.ended ? '（終わった後）' : '')); };
   r.onnomatch = () => diag('nomatch');
   r.onend = () => { o.ended = true; diag('mic end #' + o.id + ' (' + ((Date.now() - o.t0) / 1000).toFixed(1) + 's)'); if (recOpen === o) recOpen = null; o._end(); tell('end'); };
   try { r.start(); diag('start() called #' + o.id); }
@@ -705,7 +751,7 @@ function render() {
   $('#view').innerHTML = f();
   if (screen === 'conv' && C) renderConvBody();
   if (screen === 'pron' && P) renderPronDock();
-  if (screen === 'diag') { const l = $('#diaglog'); if (l) l.value = DIAG.join('\n'); }
+  if (screen === 'diag') { const l = $('#diaglog'); if (l) l.value = diagReport(); }
 }
 function header() {
   const li = levelInfo(S.player.xp); const st = streak();
@@ -718,19 +764,39 @@ function currentMission() {
 function stampEmoji(b) { return b === 'gold' ? '🥇' : b === 'silver' ? '🥈' : b === 'bronze' ? '🥉' : ''; }
 function tripPercent() { let all = 0, done = 0; for (const s of CONTENT.stages) for (const c of s.checkpoints) { all++; if (S.cp[c.id] && S.cp[c.id].best) done++; } return all ? Math.round(done / all * 100) : 0; }
 
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// 今日の画面の一番上に出すお知らせ：保存データの問題／Safariで開いている／バックアップのおすすめ
+function notices() {
+  let h = '';
+  if (loadProblem === 'broken') h += `<div class="banner" style="background:var(--ng-bg)">⚠️ <b>保存してあった記録が読めなかったため、新しく始めています。</b>読めなかったデータは消さずに残してあります。前の記録に戻せることがあります。
+    <button class="btn sub" style="margin:8px 0 0;min-height:44px;font-size:15px" data-act="tab" data-arg="settings">「設定」→ 🛟 もしものときの控え を開く</button></div>`;
+  if (loadProblem === 'storage') h += `<div class="banner" style="background:var(--ng-bg)">⚠️ <b>このブラウザでは記録を保存できません。</b>プライベートブラウズを切るか、ホーム画面のアイコンから開いてください。</div>`;
+  if (isIOS && !isStandalone()) h += `<div class="banner">⚠️ <b>いま Safari で開いています。</b>ここでの記録は、ホーム画面のエイゴログとは別の場所に保存され、お互いに見えません。ふだんはホーム画面のアイコンから開いてください。${S.player.xp > 0 ? '<br>ここにある記録は、設定の「書き出す」→ ホーム画面アプリの「読み込む」で移せます。' : '<br>まだのときは、共有ボタン →「ホーム画面に追加」。'}</div>`;
+  const due = backupDue();
+  if (due) h += `<div class="card"><h2>💾 バックアップのおすすめ</h2><div class="small">${due}。記録（${slotSummary(JSON.stringify(S))}）はこのiPhoneの中だけにあり、アプリを消すと一緒に消えます。</div>
+    <div class="row" style="margin-top:8px"><button class="btn" style="margin:0" data-act="exportData">⬆️ 書き出す</button><button class="btn sub" style="margin:0" data-act="snoozeBackup">あとで</button></div></div>`;
+  return h;
+}
 function vHome() {
   const m = currentMission(); const li = levelInfo(S.player.xp); const d = S.days[today()]; const cp = S.cp[m.id] || {};
   const mode = inputMode();
-  return header() + `
+  const weak = Object.values(S.weak || {}).sort((a, b) => (b.last || '').localeCompare(a.last || ''));
+  const ss = liveSession();
+  return header() + notices() + `
   <div class="banner">🧪 試作版（段階1）：入国審査の会話1本と発音チェックで、iPhoneの音声まわりを確かめる版です。</div>
   <div class="card">
     <div class="muted">今日のミッション</div>
     <h2 style="font-size:21px;margin:4px 0 10px">${m.icon} ${esc(m.mission || m.title)}</h2>
     <div class="muted small">旅程 ${tripPercent()}%</div>
     <div class="bar" style="margin:4px 0 12px"><i style="width:${Math.max(2, tripPercent())}%"></i></div>
-    <button class="btn big" data-act="startConv" data-arg="${m.scenario}">🗣️ 会話をはじめる</button>
+    ${ss ? `<button class="btn big" data-act="resumeConv">▶️ つづきから（${ss.turns.length}往復まで済み）</button>
+    <button class="btn sub" data-act="startConv" data-arg="${ss.scId}">🔁 最初から会話する</button>` : `<button class="btn big" data-act="startConv" data-arg="${m.scenario}">🗣️ 会話をはじめる</button>`}
     <button class="btn sub" data-act="startPron" data-arg="${m.id}">📢 発音チェック（${m.title}のフレーズ）</button>
   </div>
+  ${weak.length ? `<div class="card"><h2>📌 復習：聞こえ方があやしかった文</h2>
+    <div class="muted small">会話でうまく聞き取られなかった文です。発音チェックで合格すると、ここから消えます。</div>
+    ${weak.slice(0, 3).map(w => `<div class="en" style="margin-top:4px">・${esc(w.en)}</div>`).join('')}${weak.length > 3 ? `<div class="muted small">ほか ${weak.length - 3} 文</div>` : ''}
+    <button class="btn" style="margin-top:10px" data-act="practiceWeak">🎤 復習する（${weak.length}文）</button></div>` : ''}
   <div class="card">
     <div class="stat">
       <div><b>${li.L}</b><span>レベル</span></div>
@@ -775,7 +841,30 @@ function startConv(scId) {
   const diff = (cp.best === 'gold' || cp.best === 'silver') ? 2 : (cp.plays || 0) > 0 ? 1 : 0;
   const rate = S.settings.rate === 'auto' ? [0.7, 0.85, 1.0][diff] : Number(S.settings.rate);
   C = { scId, sc, diff, rate, log: [], turns: [], node: null, turn: null, asks: 0, askKinds: new Set(), busy: false, ended: false, t0: Date.now() };
+  if (S.session) { S.session = null; save(); }
   studyStart(); go('conv'); gotoNode(sc.start, '');
+}
+/* つづきから：1往復すむごとに、会話の途中の状態を保存する。アプリを閉じても、次に開いたとき続きから再開できる */
+function saveSession() {
+  S.session = { scId: C.scId, node: C.node, diff: C.diff, rate: C.rate, turns: C.turns, log: C.log.map(e => ({ who: e.who, text: e.text, ja: e.ja })),
+    asks: C.asks, askKinds: [...C.askKinds], elapsed: Date.now() - C.t0, date: today() };
+  save();
+}
+function liveSession() {
+  const ss = S.session; if (!ss || !ss.scId) return null;
+  const sc = CONTENT.scenarios[ss.scId]; if (!sc || !sc.nodes[ss.node] || !(ss.turns && ss.turns.length)) return null;
+  if (ss.date && (new Date(today() + 'T00:00:00') - new Date(ss.date + 'T00:00:00')) / 86400000 > 7) return null;   // 1週間より前の途中は出さない
+  return ss;
+}
+function resumeConv() {
+  const ss = liveSession(); if (!ss) { S.session = null; save(); render(); return; }
+  const sc = CONTENT.scenarios[ss.scId];
+  C = { scId: ss.scId, sc, diff: ss.diff || 0, rate: ss.rate || 0.85, log: (ss.log || []).map(e => Object.assign({}, e, { cur: false })), turns: ss.turns || [], node: null, turn: null,
+    asks: ss.asks || 0, askKinds: new Set(ss.askKinds || []), busy: false, ended: false, t0: Date.now() - (ss.elapsed || 0) };
+  if (C.log.length && C.log[C.log.length - 1].who === 'npc') C.log.pop();   // 最後の相手のセリフは、これから言い直すので取り除く
+  C.log.push({ who: 'sys', text: '▶️ つづきから再開します' });
+  diag('resume: ' + ss.scId + ' ' + ss.node + ' turns=' + C.turns.length);
+  studyStart(); go('conv'); gotoNode(ss.node, '');
 }
 const curNode = () => C.sc.nodes[C.node];
 async function gotoNode(id, preface) {
@@ -784,6 +873,7 @@ async function gotoNode(id, preface) {
   C.turn = { nodeId: id, said: '', tries: [], hint: 0, revealed: false, misses: 0, asks: 0 };
   const line = (preface ? preface + ' ' : '') + n.say;
   C.log.push({ who: 'npc', text: line, ja: n.ja, cur: true });
+  if (C.turns.length) saveSession();
   renderConvBody();
   await npcSay(line, C.rate);
 }
@@ -877,6 +967,46 @@ function matchNode(n, alts) {
   }
   return { type: 'miss', said: alts[0] };
 }
+/* 「通じた」答えが、はっきり通じたのか、たまたま単語が1つ当たっただけなのかを見分ける。
+   聞こえた英語の主な単語が、その答えのお手本やキーワードに無いものばかり（または同じ単語のくり返し）なら「あやしい」。
+   level: clear=はっきり通じた doubt=通じたが聞こえ方があやしい free=自由に答える質問（判定しない）
+   model: 言いたかったと思われるお手本の文 */
+function modelsFor(n, it) {
+  if (it.ex) return it.ex;
+  const ph = CONTENT.phrases[it.phrase || n.phrase];
+  return [...n.examples, ...n.choices, ...(ph ? [ph.en, ...(ph.alt || [])] : [])];
+}
+function judgeHeard(n, it, alts, slot) {
+  if (it.any) return { level: 'free', model: n.hint.model };
+  const models = modelsFor(n, it); const isDur = it.slot === 'duration';
+  // 日数の答えは、数と単位（day/week…）をそれぞれ同じ記号に置きかえて比べる（数が違っても正しい答えなので）
+  const nw = t => { let w = normalize(t); if (isDur) w = w.map(x => (x in NUMW && x !== 'a' && x !== 'an') ? '#' : /^(day|night|week|month)s?$/.test(x) ? '@' : x).filter((x, i, a) => !(x === '#' && a[i - 1] === '#')); return w; };
+  const vocab = new Set(); models.forEach(m => nw(m).forEach(w => vocab.add(w)));
+  (it.match || []).forEach(pat => pat.forEach(g => g.split('|').forEach(a => nw(a).forEach(w => vocab.add(w)))));
+  const vlist = [...vocab]; const known = w => vocab.has(w) || vlist.some(v => wordEq(v, w));
+  let clear = false;
+  for (const alt of alts) {
+    const w = nw(alt); if (!w.length) continue;
+    const content = w.filter(x => !STOP.has(x));
+    const dup = w.some((x, i) => i > 0 && x === w[i - 1] && x !== '#');
+    const ratio = content.length ? content.filter(known).length / content.length : 1;
+    if (ratio >= 0.8 && !dup) { clear = true; break; }
+  }
+  // 言いたかったと思われる文：主な単語がいちばん多く重なるお手本（重なりがなければ最初のお手本）
+  let model = models[0] || n.hint.model;
+  if (slot) model = `For ${numWords(slot.n)} ${slot.unit}${slot.n > 1 ? 's' : ''}.`;
+  else {
+    const said = new Set(nw(alts[0]).filter(x => !STOP.has(x))); let best = 0;
+    models.forEach(m => { const sc = nw(m).filter(x => !STOP.has(x) && said.has(x)).length; if (sc > best) { best = sc; model = m; } });
+  }
+  return { level: clear ? 'clear' : 'doubt', model };
+}
+const needsPractice = t => !!(t.tapped || t.misses > 0 || t.hint >= 2 || (t.heard && t.heard.level === 'doubt'));
+function practiceItem(t) {
+  const n = C.sc.nodes[t.nodeId]; const en = (t.heard && t.heard.model) || n.hint.model;
+  const ph = Object.values(CONTENT.phrases).find(x => x.en === en);
+  return { en, ja: ph ? ph.ja : '', q: n.say, qja: n.ja, pid: '' };
+}
 async function handleAnswer(alts) {
   if (!C || C.ended || !alts || !alts.length) return;
   // NPCが話し終わるのを少し待つ（話している最中に答えても取りこぼさない）
@@ -902,8 +1032,11 @@ async function handleAnswer(alts) {
         const r = n.reactions.find(x => m.slot.days <= x.max) || n.reactions[n.reactions.length - 1];
         reply = r.say.replace('{dur}', durText(m.slot)); if (r.next) next = r.next;
       }
-      Object.assign(C.turn, { said, ok: true, intent: it.id, phrase: it.phrase || n.phrase });
+      const heard = C.turn.tapped ? { level: 'clear', model: said } : judgeHeard(n, it, alts, m.slot);
+      Object.assign(C.turn, { said, ok: true, intent: it.id, phrase: it.phrase || n.phrase, heard });
       C.turns.push(C.turn);
+      diag('heard: ' + heard.level + (heard.level === 'doubt' ? ' → ' + heard.model : ''));
+      if (heard.level === 'doubt') C.log.push({ who: 'sys', text: '🔶 お手本と少し違って聞こえました（終わってから練習できます）' });
       if (next) await gotoNode(next, reply);
       else {
         C.log.forEach(e => e.cur = false); C.log.push({ who: 'npc', text: reply, cur: false });
@@ -921,7 +1054,9 @@ async function handleAnswer(alts) {
 function finishConv() {
   studyStop();
   const hints = C.turns.reduce((a, t) => a + t.hint, 0), reveals = C.turns.filter(t => t.revealed).length;
-  const stamp = hints === 0 && reveals === 0 ? 'gold' : hints <= 1 ? 'silver' : 'bronze';
+  const doubts = C.turns.filter(t => t.heard && t.heard.level === 'doubt').length;
+  // 金：ヒントなし・文字表示なし・全部はっきり通じた　銀：ヒント1回以下　銅：最後までやり切った
+  const stamp = hints === 0 && reveals === 0 && doubts === 0 ? 'gold' : hints <= 1 ? 'silver' : 'bronze';
   let xp = 0; C.turns.forEach(t => { t.xp = Math.max(5, 20 - [0, 5, 10, 15][t.hint]); xp += t.xp; });
   const cp = S.cp[C.sc.cp] || (S.cp[C.sc.cp] = { plays: 0, best: '', noHintClears: 0 });
   const rank = { '': 0, bronze: 1, silver: 2, gold: 3 }; const improved = rank[stamp] > rank[cp.best || ''];
@@ -932,15 +1067,20 @@ function finishConv() {
   cp.last = today(); if (!cp.cleared) cp.cleared = today();
   const d = day(); d.turns += C.turns.length; d.hintFreeTurns += C.turns.filter(t => t.hint === 0).length; d.convs = (d.convs || 0) + 1;
   // 復習（SRS）に入れる：ヒントや言い直しが必要だった文は早めに出る
-  C.turns.forEach(t => { if (!t.phrase) return; srsGrade(t.phrase, t.hint >= 2 ? 1 : (t.hint > 0 || t.misses > 0) ? 3 : 4); });
+  C.turns.forEach(t => { if (!t.phrase) return; srsGrade(t.phrase, t.hint >= 2 ? 1 : (t.hint > 0 || t.misses > 0 || (t.heard && t.heard.level === 'doubt')) ? 3 : 4); });
+  // 復習リストに入れる：聞こえ方があやしかった文・言い直した文・ヒントを多く使った文・タップで答えた文
+  C.turns.filter(needsPractice).forEach(t => { const it = practiceItem(t); const w = S.weak[it.en] || Object.assign(it, { n: 0 }); w.n++; w.last = today(); S.weak[it.en] = w; });
   C.askKinds.forEach(p => srsGrade(p, 4));
+  S.session = null;   // 最後まで行ったので、途中の状態は消す
   save();
-  C.result = { stamp, xp, clearBonus, askBonus, hints, reveals, improved, sec: Math.round((Date.now() - C.t0) / 1000) };
+  C.result = { stamp, xp, clearBonus, askBonus, hints, reveals, doubts, improved, sec: Math.round((Date.now() - C.t0) / 1000) };
   refreshDock();
 }
 function vReview() {
   const r = C.result; const sname = { gold: '金', silver: '銀', bronze: '銅' }[r.stamp];
   const free = C.turns.filter(t => t.hint === 0).length;
+  const clearN = C.turns.filter(t => !t.tapped && !(t.heard && t.heard.level === 'doubt')).length;
+  const todo = C.turns.filter(needsPractice).length;
   let h = `<div class="screen" style="height:auto;min-height:100dvh"><div class="shead"><button class="x" data-act="tab" data-arg="home" aria-label="閉じる">✕</button><div class="ttl">振り返り</div></div>
   <div style="padding:12px 16px calc(24px + env(safe-area-inset-bottom))">
   <div class="card" style="text-align:center">
@@ -949,20 +1089,36 @@ function vReview() {
     ${r.improved ? '<div class="ok" style="font-weight:700">スタンプ更新！</div>' : ''}
     <div class="stat" style="margin-top:10px">
       <div><b>+${r.xp}</b><span>XP</span></div>
+      <div><b>${clearN}/${C.turns.length}</b><span>はっきり通じた</span></div>
       <div><b>${free}/${C.turns.length}</b><span>ヒントなし</span></div>
-      <div><b>${C.asks}</b><span>聞き返し</span></div>
     </div>
-    <div class="muted small" style="margin-top:8px">会話 ${r.xp - r.clearBonus - r.askBonus} ＋ クリア ${r.clearBonus}${r.askBonus ? ' ＋ 聞き返し ' + r.askBonus : ''} XP　・　${Math.floor(r.sec / 60)}分${r.sec % 60}秒</div>
+    <div class="muted small" style="margin-top:8px">会話 ${r.xp - r.clearBonus - r.askBonus} ＋ クリア ${r.clearBonus}${r.askBonus ? ' ＋ 聞き返し ' + r.askBonus : ''} XP　・　${Math.floor(r.sec / 60)}分${r.sec % 60}秒${C.asks ? '　・　聞き返し ' + C.asks + '回' : ''}</div>
     ${C.asks ? '<div class="small" style="margin-top:8px">👍 聞き返しは、実際の旅でいちばん役に立つ技術です。</div>' : ''}
+    ${r.stamp !== 'gold' && r.hints === 0 && r.reveals === 0 ? '<div class="small" style="margin-top:8px">🥇 金スタンプは、全部の答えが「はっきり通じた」ときにもらえます。</div>' : ''}
   </div>
+  ${todo ? `<div class="card"><h2>🔶 練習するとよい文：${todo}つ</h2>
+    <div class="small">会話は通じましたが、機械にはお手本と少し違って聞こえた文があります。お手本を聞いて、真似して言ってみましょう（聞こえた英語が言ったとおりなら、そのままで大丈夫です）。合格するまで「今日」の画面の復習リストに残ります。</div>
+    <button class="btn" style="margin-top:10px" data-act="practiceAll">🎤 まとめて練習する（${todo}つ）</button></div>` : ''}
   <div class="card"><h2>やり取りの振り返り</h2>`;
-  C.turns.forEach(t => {
-    const n = C.sc.nodes[t.nodeId]; const good = t.hint === 0 && t.misses === 0;
+  C.turns.forEach((t, i) => {
+    const n = C.sc.nodes[t.nodeId]; const lv = t.heard ? t.heard.level : 'clear'; const lines = [];
+    if (t.tapped) lines.push('👆 タップで答えました（次は声で言ってみましょう）');
+    else {
+      lines.push(lv === 'doubt' ? '🔶 通じました。ただ、聞こえた英語がお手本と少し違います' : lv === 'free' ? '✅ 答えられました（自由に答える質問）' : '✅ はっきり通じました');
+      if (t.hint || t.misses) lines.push(`⚠️ ${t.hint ? 'ヒント' + t.hint + '回' : ''}${t.hint && t.misses ? '・' : ''}${t.misses ? '言い直し' + t.misses + '回' : ''}`);
+    }
+    const tries = (t.tries || []).filter(x => x !== t.said);
     h += `<div class="turn"><div class="muted small">相手</div><div class="en" style="font-weight:700">${esc(n.say)}</div><div class="muted small">${esc(n.ja)}</div>
-      <div style="margin-top:6px">${good ? '✅ うまく言えました' : t.tapped ? '👆 タップで答えました（次は声で言ってみましょう）' : `⚠️ ${t.hint ? 'ヒント' + t.hint + '回' : ''}${t.hint && t.misses ? '・' : ''}${t.misses ? '言い直し' + t.misses + '回' : ''}`}</div>
-      <div class="small">あなた：<span class="en">${esc(t.said)}</span></div>
-      <div class="muted small" style="margin-top:6px">自然な言い方の例</div>
-      ${n.examples.map(x => `<div class="ex"><button data-act="sayText" data-arg="${esc(x)}" aria-label="お手本">🔊</button><span class="en">${esc(x)}</span></div>`).join('')}</div>`;
+      <div style="margin-top:6px">${lines.join('<br>')}</div>
+      ${t.tapped ? '' : `<div class="small">機械に聞こえた英語：<span class="en" style="font-weight:700">${esc(t.said)}</span>${tries.length ? `<span class="muted">（その前：${esc(tries.join(' / '))}）</span>` : ''}</div>`}`;
+    if (needsPractice(t)) {
+      const m = practiceItem(t).en;
+      h += `<div class="hintbox" style="margin-top:8px"><div class="small">${lv === 'doubt' ? 'お手本（言いたかったのがこの文なら、練習しましょう）' : 'お手本'}</div>
+        <div class="ex"><button data-act="sayText" data-arg="${esc(m)}" aria-label="お手本">🔊</button><button data-act="saySlow" data-arg="${esc(m)}" aria-label="ゆっくり">🐢</button><b class="en" style="font-size:18px">${esc(m)}</b></div>
+        <button class="btn sub" style="min-height:48px;font-size:16px;margin:6px 0 0" data-act="practiceTurn" data-arg="${i}">🎤 この文を練習する</button></div>`;
+    }
+    h += `<div class="muted small" style="margin-top:6px">自然な言い方の例</div>
+      ${n.examples.map(x => `<div class="ex"><button data-act="sayText" data-arg="${esc(x)}" aria-label="お手本">🔊</button><button data-act="saySlow" data-arg="${esc(x)}" aria-label="ゆっくり">🐢</button><span class="en">${esc(x)}</span></div>`).join('')}</div>`;
   });
   h += `</div>
   <button class="btn big" data-act="startConv" data-arg="${C.scId}">🔁 もう一度会話する</button>
@@ -976,10 +1132,16 @@ function vReview() {
 let P = null;
 function startPron(cpId) {
   const cp = findCp(cpId); if (!cp || !cp.phrases) return;
-  P = { cpId, list: cp.phrases, idx: 0, stage: 'listen', result: null };
+  startPronList(cp.phrases.map(id => Object.assign({ pid: id }, CONTENT.phrases[id])), 'home', '📢 発音チェック');
+}
+// items：{en, ja, q(相手の質問), qja, pid(フレーズ番号。なければ空)} の並び。back：終わったら戻る画面
+function startPronList(items, back, title) {
+  if (!items || !items.length) return;
+  P = { items, idx: 0, stage: 'listen', result: null, back: back || 'home', title: title || '📢 発音チェック' };
   studyStart(); go('pron'); setTimeout(() => playPron(0.85), 300);
 }
-const curPhrase = () => CONTENT.phrases[P.list[P.idx]];
+const curPhrase = () => P.items[P.idx];
+const pronKey = p => p.pid || 'w:' + p.en;
 function playPron(rate) { return speak(curPhrase().en, { who: 'narrator', rate }); }
 function vPron() {
   const p = curPhrase(); const r = P.result;
@@ -988,20 +1150,20 @@ function vPron() {
     body = `<div class="muted">🎧 まず音だけ聞いてみましょう</div><div class="pen hidden-line">・・・・・</div>
       <button class="btn sub" data-act="pronStage" data-arg="shown">📝 文字と意味を見る</button>`;
   } else {
-    body = `<div class="pen en">${esc(p.en)}</div><div>${esc(p.ja)}</div>
+    body = `${p.q ? `<div class="muted small">相手の質問：<span class="en">${esc(p.q)}</span>（${esc(p.qja || '')}）</div>` : ''}<div class="pen en">${esc(p.en)}</div><div>${esc(p.ja || '')}</div>
       ${p.frame ? `<div class="muted small" style="margin-top:6px">型：<span class="en">${esc(p.frame)}</span></div>` : ''}
       ${p.hear ? `<div class="muted small">言われる言葉：<span class="en">${esc(p.hear[0].en)}</span>（${esc(p.hear[0].ja)}）</div>` : ''}`;
   }
   if (r) {
     body += `<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px;text-align:center">
-      <div class="score ${r.pass ? 'ok' : 'ng'}">${r.self ? '✔' : r.score}</div><div style="font-weight:700">${r.self ? '言えました（自己採点）' : r.pass ? '合格！' + (r.xp ? ' +' + r.xp + 'XP' : '') : 'もう少し！赤い単語を意識してもう一度'}</div>
+      <div class="score ${r.pass ? 'ok' : 'ng'}">${r.self ? '✔' : r.score}</div><div style="font-weight:700">${r.self ? '言えました（自己採点）' : r.pass ? '合格！' + (r.xp ? ' +' + r.xp + 'XP' : '') + (r.cleared ? '　📌 復習リストから外しました' : '') : 'もう少し！赤い単語を意識してもう一度'}</div>
       ${r.self ? '' : `<div style="margin-top:8px">${tokHtml(r.E, r.okE)}</div>
       <div class="muted small" style="margin-top:8px">機械に聞こえた英語</div><div>${tokHtml(r.G, r.okG)}</div>`}</div>`;
   }
   return `<div class="screen">
-    <div class="shead"><button class="x" data-act="quitPron" aria-label="やめる">✕</button><div class="ttl">📢 発音チェック</div><span class="chip">${P.idx + 1} / ${P.list.length}</span></div>
+    <div class="shead"><button class="x" data-act="quitPron" aria-label="やめる">✕</button><div class="ttl">${esc(P.title)}</div><span class="chip">${P.idx + 1} / ${P.items.length}</span></div>
     <div class="chat"><div class="card pcard">${body}</div>
-      <div class="row"><button class="btn sub" data-act="pronPrev" ${P.idx === 0 ? 'disabled' : ''}>← 前へ</button><button class="btn sub" data-act="pronNext">${P.idx === P.list.length - 1 ? '終わる' : '次へ →'}</button></div></div>
+      <div class="row"><button class="btn sub" data-act="pronPrev" ${P.idx === 0 ? 'disabled' : ''}>← 前へ</button><button class="btn sub" data-act="pronNext">${P.idx === P.items.length - 1 ? '終わる' : '次へ →'}</button></div></div>
     <div class="dock" id="dock"></div></div>`;
 }
 function renderPronDock() {
@@ -1017,7 +1179,9 @@ function judgePron(alts) {
   const p = curPhrase();
   const r = scorePron(p.en, alts); const d = day(); d.pron.push(r.score);
   r.xp = 0;
-  if (r.pass && !d.pronPassed.includes(P.list[P.idx])) { d.pronPassed.push(P.list[P.idx]); r.xp = 10; addXP(10); srsGrade(P.list[P.idx], 4); }
+  const key = pronKey(p);
+  if (r.pass && !d.pronPassed.includes(key)) { d.pronPassed.push(key); r.xp = 10; addXP(10); if (p.pid) srsGrade(p.pid, 4); }
+  if (r.pass && S.weak[p.en]) { delete S.weak[p.en]; r.cleared = true; }   // 合格したら復習リストから外す
   save(); P.result = r; P.stage = 'shown'; render();
   diag('pron: ' + JSON.stringify(alts) + ' → ' + r.score + (r.pass ? ' pass' : ''));
 }
@@ -1062,6 +1226,10 @@ function vSettings() {
     <div class="muted small">前回の書き出し：${S.sys.lastBackup || 'まだありません'}</div>
     <button class="btn" style="margin-top:8px" data-act="exportData">⬆️ 書き出す（JSON）</button>
     <button class="btn sub" data-act="importData">⬇️ 読み込む</button>
+    <details ${loadProblem ? 'open' : ''}><summary class="small">🛟 もしものときの控え（このiPhoneの中）</summary>
+      ${['undo', 'daily', 'broken'].map(k => { const sl = getSlot(k); if (!sl) return ''; return `<div class="turn"><b>${SLOT_LABEL[k]}</b><div class="muted small">${fmtAt(sl.at)}・${esc(sl.why)}<br>${k === 'broken' ? '中身：' + Math.round(sl.raw.length / 1024 * 10) / 10 + ' KB' : esc(slotSummary(sl.raw))}</div>
+        <div class="row" style="margin-top:6px">${k === 'broken' ? '' : `<button class="btn sub" style="margin:0;min-height:44px;font-size:15px" data-act="restoreSlot" data-arg="${k}">↩️ これに戻す</button>`}<button class="btn sub" style="margin:0;min-height:44px;font-size:15px" data-act="exportSlot" data-arg="${k}">📤 取り出す</button></div></div>`; }).join('') || '<div class="muted small" style="margin-top:6px">いまは控えがありません。</div>'}
+      <div class="muted small" style="margin-top:6px">控えはこのiPhoneの中にあるので、アプリを消すと一緒に消えます。大事な記録は「書き出す」で外に保存してください。</div></details>
   </div>
   <div class="card"><h2>そのほか</h2>
     <button class="btn warn" data-act="resetAll">記録をすべて消す</button>
@@ -1089,6 +1257,7 @@ function vDiag() {
       <tr><td>お手本の声</td><td>${nar ? esc(vLabel(nar)) : '—'}</td></tr>
       <tr><td>審査官の声</td><td>${off.v ? esc(vLabel(off.v)) : '—'}</td></tr>
     </table>
+    <div class="row" style="margin-top:12px"><button class="btn sub" style="margin:0" data-act="copyDiag">📋 診断結果をコピー</button><button class="btn sub" style="margin:0" data-act="shareDiag">📤 共有</button></div>
   </div>
   <div class="card"><h2>① マイクのテスト</h2>
     <div class="small">ボタンを押して <b class="en">"Good morning."</b> と言ってください。</div>
@@ -1110,8 +1279,8 @@ function vDiag() {
   </div>
   <div class="card"><h2>④ 動きの記録</h2>
     <textarea class="log" id="diaglog" readonly></textarea>
-    <button class="btn sub" style="margin-top:8px" data-act="copyDiag">📋 診断結果をコピー</button>
-    <div class="muted small">うまく動かないときは、コピーした内容をジュピに貼ってください。</div>
+    <div class="row" style="margin-top:8px"><button class="btn sub" data-act="copyDiag">📋 診断結果をコピー</button><button class="btn sub" data-act="shareDiag">📤 共有</button></div>
+    <div class="muted small">うまく動かないときは、コピーした内容をジュピに貼ってください。コピーできないときは「共有」から「コピー」を選べます。</div>
   </div>`;
 }
 function diagReport() {
@@ -1119,7 +1288,7 @@ function diagReport() {
   return ['【エイゴログ 診断】版 ' + APP_VERSION, '日時 ' + new Date().toLocaleString('ja-JP'), '開き方 ' + (isStandalone() ? 'ホーム画面アプリ' : 'ブラウザ'),
     'ネット ' + navigator.onLine, '音声認識 ' + !!SR, '答え方 ' + inputMode(), 'マイク失敗 ' + JSON.stringify(S.sys.micBroken), 'UA ' + navigator.userAgent,
     '声 ' + voices.length + '個 / お手本 ' + (nar ? vLabel(nar) : '-'), '声の一覧: ' + voices.slice(0, 15).map(v => v.name + '[' + (v.voiceURI || '') + ']').join(', '),
-    'マイクテスト ' + micTest.replace(/<[^>]+>/g, ''), '続けてテスト ' + seqMsg.replace(/<br>/g, ' / ').replace(/<[^>]+>/g, ''), '聞き取りの状態 ' + (recOpen ? '開いたまま#' + recOpen.id : '閉じている') + ' 空振り' + emptyRuns, '--- 記録 ---', ...DIAG].join('\n');
+    'マイクテスト ' + micTest.replace(/<[^>]+>/g, ''), '続けてテスト ' + seqMsg.replace(/<br>/g, ' / ').replace(/<[^>]+>/g, ''), '聞き取りの状態 ' + (recOpen ? '開いたまま#' + recOpen.id : '閉じている') + ' 空振り' + emptyRuns, '控え ' + (['undo', 'daily', 'broken'].filter(k => getSlot(k)).join(',') || 'なし') + ' / 途中の会話 ' + (liveSession() ? 'あり' : 'なし') + ' / 読み込み ' + (loadProblem || '正常') + ' / 前回の書き出し ' + (S.sys.lastBackup || 'なし'), '--- 記録 ---', ...DIAG].join('\n');
 }
 
 /* =====================================================================
@@ -1128,17 +1297,28 @@ function diagReport() {
 const ACT = {
   tab: a => { if (screen === 'conv' || screen === 'pron') { detachListening(); stopSpeaking(); studyStop(); } go(a); },
   startConv: a => startConv(a),
-  quitConv: () => { if (!confirm('会話をやめますか？（この会話の結果は残りません）')) return; detachListening(); stopSpeaking(); studyStop(); C.ended = true; go('home'); },
+  quitConv: () => {
+    if (!confirm(C.turns.length ? '会話をやめますか？\n\nここまでの分は残ります。「今日」の画面の「つづきから」で再開できます。' : '会話をやめますか？')) return;
+    detachListening(); stopSpeaking(); studyStop(); if (C.turns.length && !C.result) saveSession(); C.ended = true; go('home');
+  },
+  resumeConv: () => resumeConv(),
+  snoozeBackup: () => { S.sys.backupSnooze = today(); save(); render(); },
+  restoreSlot: a => restoreSlot(a),
+  exportSlot: async a => { const sl = getSlot(a); if (!sl) return; await saveFile(`eigolog_${a}_${today()}.${a === 'broken' ? 'txt' : 'json'}`, a === 'broken' ? sl.raw : JSON.stringify({ app: 'eigolog', version: APP_VERSION, exportedAt: sl.at, data: JSON.parse(sl.raw) }, null, 1), a === 'broken' ? 'text/plain' : 'application/json'); },
   toReview: () => { if (C && C.result) go('review'); },
   replay: () => { if (!C) return; const last = [...C.log].reverse().find(e => e.who === 'npc'); speak(last ? last.text : curNode().say, { who: C.sc.npc, rate: C.rate }); },
   replaySlow: () => { if (!C) return; const last = [...C.log].reverse().find(e => e.who === 'npc'); speak(last ? last.text : curNode().say, { who: C.sc.npc, rate: 0.7 }); },
   reveal: () => { C.turn.revealed = true; renderConvBody(); },
   hint: () => { if (C.turn.hint >= 3) return; C.turn.hint++; refreshDock(); if (C.turn.hint === 3) speak(curNode().hint.model, { rate: 0.8 }); },
   sayText: a => speak(a, { rate: 0.8 }),
-  choose: a => { detachListening(); handleAnswer([a]); },
+  saySlow: a => speak(a, { rate: 0.6 }),
+  practiceTurn: a => startPronList([practiceItem(C.turns[+a])], 'review', '🎤 練習'),
+  practiceAll: () => { const seen = new Set(); startPronList(C.turns.filter(needsPractice).map(practiceItem).filter(x => !seen.has(x.en) && seen.add(x.en)), 'review', '🎤 あやしかった文の練習'); },
+  practiceWeak: () => startPronList(Object.values(S.weak || {}).sort((a, b) => (b.last || '').localeCompare(a.last || '')), 'home', '📌 復習'),
+  choose: a => { detachListening(); stopSpeaking(); handleAnswer([a]); },
   // 答えの例：タップで選ぶ＋お手本。「この答えで進む」でタップのまま答えられる（ヒント3段目と同じ扱い）
   pick: a => { if (!C || !C.turn) return; C.turn.picked = a; refreshDock(); speak(a, { rate: 0.8 }); },
-  usePick: () => { if (!C || !C.turn || !C.turn.picked) return; C.turn.hint = 3; C.turn.tapped = true; const a = C.turn.picked; detachListening(); handleAnswer([a]); },
+  usePick: () => { if (!C || !C.turn || !C.turn.picked) return; C.turn.hint = 3; C.turn.tapped = true; const a = C.turn.picked; detachListening(); stopSpeaking(); handleAnswer([a]); },
   mic: async () => {
     const alts = await runMic(refreshDock);
     if (alts) handleAnswer(alts);
@@ -1147,33 +1327,32 @@ const ACT = {
   pronPlay: () => playPron(0.85),
   pronSlow: () => playPron(0.7),
   pronPrev: () => { detachListening(); if (P.idx > 0) { P.idx--; P.stage = 'listen'; P.result = null; render(); setTimeout(() => playPron(0.85), 200); } },
-  pronNext: () => { detachListening(); if (P.idx < P.list.length - 1) { P.idx++; P.stage = 'listen'; P.result = null; render(); setTimeout(() => playPron(0.85), 200); } else { studyStop(); stopSpeaking(); go('home'); toast('おつかれさまでした！'); } },
+  pronNext: () => { detachListening(); if (P.idx < P.items.length - 1) { P.idx++; P.stage = 'listen'; P.result = null; render(); setTimeout(() => playPron(0.85), 200); } else { studyStop(); stopSpeaking(); go(P.back === 'review' && C && C.result ? 'review' : 'home'); toast('おつかれさまでした！'); } },
   pronMic: async () => {
     const alts = await runMic(renderPronDock);
     if (alts) judgePron(alts);
   },
-  pronSelf: () => { const d = day(); if (!d.pronPassed.includes(P.list[P.idx])) { d.pronPassed.push(P.list[P.idx]); addXP(5); } save(); P.result = { self: true, pass: true }; P.stage = 'shown'; render(); },
-  quitPron: () => { detachListening(); stopSpeaking(); studyStop(); go('home'); },
+  pronSelf: () => { const d = day(); const key = pronKey(curPhrase()); if (!d.pronPassed.includes(key)) { d.pronPassed.push(key); addXP(5); } save(); P.result = { self: true, pass: true }; P.stage = 'shown'; render(); },
+  quitPron: () => { detachListening(); stopSpeaking(); studyStop(); go(P && P.back === 'review' && C && C.result ? 'review' : 'home'); },
   set: a => { const [k, v] = a.split(':'); S.settings[k] = v; save(); render(); },
   retryMic: () => { S.sys.micBroken[ctxKey()] = 0; micOffSession = false; emptyRuns = 0; save(); render(); toast('マイク方式に戻しました'); },
   testVoice: a => speak(a === 'officer' ? 'Hello. May I see your passport, please?' : "I'm here for sightseeing.", { who: a, rate: 0.85 }),
   tryVoice: a => { const v = byURI(a); if (!v || !hasTTS) return; stopSpeaking(); const u = new SpeechSynthesisUtterance('Hello. How long will you stay?'); u.voice = v; u.lang = v.lang; u.rate = 0.85; speechSynthesis.speak(u); },
-  micTest: async () => {
+  micTest: () => oneTest(async () => {
     micTest = '聞いています…「Good morning.」と言ってください'; const el = $('#mictest'); if (el) el.textContent = micTest;
-    if (listening) return;
     const a = await micListen(t => { const e = $('#mictest'); if (e) e.textContent = '聞こえた：' + t; });
     micTest = a ? `✅ 聞き取れました：<b class="en">${esc(a.join(' / '))}</b>` : '❌ 聞き取れませんでした';
     render();
-  },
-  volTest: async () => {
+  }),
+  volTest: () => oneTest(async () => {
     await speak('This is the first test.', { rate: 0.85 });
     toast('いま何か英語で話してください', 2500);
     await micListen();
     await speak('This is the third test. Is the sound the same?', { rate: 0.85 });
-  },
+  }),
   // 「お手本 → 聞き取り」を3回続けて、2回目・3回目も聞き取れるかを確かめる
-  seqTest: async () => {
-    if (listening) return; const out = []; const show = t => { seqMsg = t; const e = $('#seqtest'); if (e) e.innerHTML = t; };
+  seqTest: () => oneTest(async () => {
+    const out = []; const show = t => { seqMsg = t; const e = $('#seqtest'); if (e) e.innerHTML = t; };
     for (let i = 1; i <= 3; i++) {
       show(out.join('<br>') + `<br>▶ ${i}/3：お手本のあとに「Hello」と言ってください`);
       await speak('Hello.', { rate: 0.85 });
@@ -1183,21 +1362,37 @@ const ACT = {
       await sleep(500);
     }
     show(out.join('<br>')); render();
-  },
+  }),
+  // 診断結果のコピー：①その場でコピー（iPhoneで確実な古い方式）→ ②だめなら新しい方式 → ③それでもだめなら案内
   copyDiag: async () => {
-    const t = diagReport();
-    try { await navigator.clipboard.writeText(t); toast('コピーしました'); }
-    catch (e) { const l = $('#diaglog'); l.value = t; l.removeAttribute('readonly'); l.select(); toast('全部選んだ状態にしました。長押しでコピーしてください', 4000); }
+    const t = diagReport(); let ok = false;
+    try {
+      const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px';
+      document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, t.length); ok = document.execCommand('copy'); ta.remove();
+    } catch (e) {}
+    if (!ok) { try { await navigator.clipboard.writeText(t); ok = true; } catch (e) {} }
+    toast(ok ? `コピーしました（${t.split('\n').length}行）` : 'コピーできませんでした。となりの「📤 共有」を使うか、記録の枠を長押しして「すべてを選択」→「コピー」してください', ok ? 2600 : 6000);
+  },
+  shareDiag: async () => {
+    try { await navigator.share({ title: 'エイゴログ 診断', text: diagReport() }); }
+    catch (e) { if (e.name !== 'AbortError') toast('共有できませんでした。「📋 コピー」を使ってください', 4000); }
   },
   exportData: () => exportData(),
   importData: () => $('#importFile').click(),
   resetAll: () => {
     const li = levelInfo(S.player.xp);
-    if (!confirm(`いまの記録（Lv.${li.L}・${S.player.xp}XP・学習日数${Object.keys(S.days).length}日）をすべて消します。元に戻せません。よろしいですか？`)) return;
+    if (!confirm(`いまの記録（Lv.${li.L}・${S.player.xp}XP・学習日数${Object.keys(S.days).length}日）をすべて消します。よろしいですか？\n\n消す直前の記録は「もしものときの控え」に1つだけ残りますが、次に読み込みなどをすると入れ替わります。`)) return;
     if (!confirm('本当に消しますか？（先にバックアップの書き出しをおすすめします）')) return;
+    putSlot('undo', JSON.stringify(S), '記録をすべて消す直前');
     const keepSettings = S.settings; S = DEFAULT(); S.settings = keepSettings; save(); go('home'); toast('記録を消しました（設定は残しています）');
   }
 };
+// 診断のテストは1つずつ（二度押しで同じテストが2つ走らないように）
+let testBusy = false;
+async function oneTest(fn) {
+  if (testBusy || listening) { toast('テスト中です。終わるまでお待ちください'); return; }
+  testBusy = true; try { await fn(); } finally { testBusy = false; }
+}
 // マイクボタン共通：聞き取り中にもう一度押しても止めない（止めるとiPhoneでは次から聞き取れなくなる）
 async function runMic(redraw) {
   if (listening) { toast('聞いています。話し終わると自動で止まります'); return null; }
@@ -1222,19 +1417,18 @@ document.addEventListener('submit', e => {
 });
 
 /* ---------- バックアップ ---------- */
+async function saveFile(name, text, type) {
+  try {
+    const file = new File([text], name, { type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return true; }
+  } catch (e) { if (e.name === 'AbortError') return false; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  return true;
+}
 async function exportData() {
   const json = JSON.stringify({ app: 'eigolog', version: APP_VERSION, exportedAt: new Date().toISOString(), data: S }, null, 1);
-  const name = `eigolog_${today()}.json`;
-  try {
-    const file = new File([json], name, { type: 'application/json' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: name });
-      S.sys.lastBackup = today(); save(); render(); return;
-    }
-  } catch (e) { if (e.name === 'AbortError') return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = name;
-  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-  S.sys.lastBackup = today(); save(); render();
+  if (await saveFile(`eigolog_${today()}.json`, json, 'application/json')) { S.sys.lastBackup = today(); save(); render(); }
 }
 $('#importFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -1242,9 +1436,10 @@ $('#importFile').addEventListener('change', async e => {
     const j = JSON.parse(await f.text()); const d = j.data || j;
     if (!d || !d.ver || !d.player) throw new Error('形式が違います');
     const a = levelInfo(S.player.xp), b = levelInfo(d.player.xp || 0);
-    const msg = `次の内容で、いまの記録を置き換えます。\n\nいま：Lv.${a.L}・${S.player.xp}XP・学習日数${Object.keys(S.days).length}日\n読み込む：Lv.${b.L}・${d.player.xp || 0}XP・学習日数${Object.keys(d.days || {}).length}日（${j.exportedAt ? j.exportedAt.slice(0, 10) + ' に書き出し' : '日付不明'}）\n\nよろしいですか？`;
+    const msg = `次の内容で、いまの記録を置き換えます。\n\nいま：Lv.${a.L}・${S.player.xp}XP・学習日数${Object.keys(S.days).length}日\n読み込む：Lv.${b.L}・${d.player.xp || 0}XP・学習日数${Object.keys(d.days || {}).length}日（${j.exportedAt ? j.exportedAt.slice(0, 10) + ' に書き出し' : '日付不明'}）\n\nいまの記録は「置き換える直前の記録」として1つだけ残るので、あとで戻せます。よろしいですか？`;
     if (!confirm(msg)) return;
-    S = merge(DEFAULT(), d); save(); go('home'); toast('読み込みました');
+    putSlot('undo', JSON.stringify(S), 'バックアップを読み込む直前');   // 読み込む前の記録を1つ残す（取り消せるように）
+    S = merge(DEFAULT(), d); loadProblem = ''; save(); go('home'); toast('読み込みました。元に戻したいときは 設定 →「もしものときの控え」', 5000);
   } catch (err) { alert('読み込めませんでした：' + err.message); }
 });
 
